@@ -30,8 +30,6 @@ export function ReportTable({ records, customers, title }: ReportTableProps) {
         const balanceDue = totalBilled - amountPaid;
         return { ...record, totalBilled, amountPaid, balanceDue };
     }).sort((a, b) => {
-        // When data is passed from Server to Client component, Dates are serialized to strings.
-        // We need to convert them back to Date objects to sort them.
         const dateA = new Date(a.storageStartDate);
         const dateB = new Date(b.storageStartDate);
         return dateB.getTime() - dateA.getTime();
