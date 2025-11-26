@@ -27,7 +27,7 @@ export default async function PendingPaymentsPage() {
     
     const pendingRecords = allRecords.map(record => {
         const totalBilled = record.hamaliPayable + record.totalRentBilled;
-        const amountPaid = record.payments.reduce((acc, p) => acc + p.amount, 0);
+        const amountPaid = (record.payments || []).reduce((acc, p) => acc + p.amount, 0);
         const balanceDue = totalBilled - amountPaid;
         return { ...record, totalBilled, amountPaid, balanceDue };
     }).filter(record => record.balanceDue > 0);
