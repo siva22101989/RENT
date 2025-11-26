@@ -155,5 +155,6 @@ export async function addCustomer(prevState: FormState, formData: FormData) {
     revalidatePath('/customers');
     revalidatePath('/new-storage');
     revalidatePath('/withdraw');
+    revalidatePath('/', 'layout');
     return { message: 'Customer added successfully.', success: true };
 }
