@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { storageRecords, customers, products, saveCustomers, saveStorageRecords, saveProducts, RATE_6_MONTHS } from '@/lib/data';
+import { storageRecords, customers, saveCustomers, saveStorageRecords, RATE_6_MONTHS } from '@/lib/data';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { detectStorageAnomalies as detectStorageAnomaliesFlow } from '@/ai/flows/anomaly-detection';
@@ -156,39 +156,4 @@ export async function addOutflow(prevState: OutflowFormState, formData: FormData
     revalidatePath('/billing');
     revalidatePath('/outflow');
     redirect('/billing');
-}
-
-const NewProductSchema = z.object({
-  name: z.string().min(3, 'Product name must be at least 3 characters.'),
-});
-
-export type ProductFormState = {
-  message: string;
-  success: boolean;
-};
-
-
-export async function addProduct(prevState: ProductFormState, formData: FormData) {
-    const validatedFields = NewProductSchema.safeParse({
-        name: formData.get('name'),
-    });
-
-    if (!validatedFields.success) {
-        const error = validatedFields.error.flatten().fieldErrors;
-        const message = Object.values(error).flat().join(', ');
-        return { message: `Invalid data: ${message}`, success: false };
-    }
-
-    const newProduct = {
-        id: `prod_${Date.now()}`,
-        ...validatedFields.data,
-    };
-
-    const currentProducts = await products();
-    currentProducts.unshift(newProduct);
-    await saveProducts(currentProducts);
-    
-    revalidatePath('/products');
-
-    return { message: 'Product added successfully.', success: true };
 }

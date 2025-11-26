@@ -1,5 +1,5 @@
 
-import type { Customer, StorageRecord, Product } from '@/lib/definitions';
+import type { Customer, StorageRecord } from '@/lib/definitions';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -50,9 +50,7 @@ async function writeJsonFile<T>(filePath: string, data: T[]): Promise<void> {
 // Data access functions
 export const customers = async (): Promise<Customer[]> => readJsonFile<Customer>(customersPath);
 export const storageRecords = async (): Promise<StorageRecord[]> => readJsonFile<StorageRecord>(storageRecordsPath);
-export const products = async (): Promise<Product[]> => readJsonFile<Product>(productsPath);
 
 // Data mutation functions
 export const saveCustomers = async (data: Customer[]): Promise<void> => writeJsonFile(customersPath, data);
 export const saveStorageRecords = async (data: StorageRecord[]): Promise<void> => writeJsonFile(storageRecordsPath, data);
-export const saveProducts = async (data: Product[]): Promise<void> => writeJsonFile(productsPath, data);
