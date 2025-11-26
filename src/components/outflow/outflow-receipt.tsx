@@ -136,14 +136,9 @@ export function OutflowReceipt({ record, customer, withdrawnBags, finalRent }: O
                         <div>
                             <h3 className="font-semibold mb-2">Final Billing Summary</h3>
                             <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
+                                <div className="flex justify-between items-center">
                                     <span>Total Rent Due</span>
-                                    <span>{formatCurrency(finalRent)}</span>
-                                </div>
-                                <div className="flex justify-between text-muted-foreground pl-4">
-                                     <span className="text-xs">
-                                        ({withdrawnBags} bags &times; {formatCurrency(rentBreakdown.totalOwed)}/bag)
-                                     </span>
+                                    <span className='font-mono'>{withdrawnBags} &times; {formatCurrency(rentBreakdown.totalOwed)} = {formatCurrency(finalRent)}</span>
                                 </div>
                                  <div className="flex justify-between">
                                     <span className="font-medium">Pending Hamali Charges</span>
