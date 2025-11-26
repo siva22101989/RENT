@@ -1,11 +1,11 @@
+
 'use server';
 
 import { z } from 'zod';
-import { storageRecords, customers } from '@/lib/data';
+import { storageRecords, customers, RATE_6_MONTHS } from '@/lib/data';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { detectStorageAnomalies as detectStorageAnomaliesFlow } from '@/ai/flows/anomaly-detection';
-import { calculateFinalRent } from './billing';
 
 const NewCustomerSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -50,5 +50,55 @@ export async function addCustomer(prevState: FormState, formData: FormData) {
     customers.unshift(newCustomer);
     
     revalidatePath('/customers');
+    revalidatePath('/inflow');
     redirect('/customers');
+}
+
+const InflowSchema = z.object({
+    customerId: z.string().min(1, 'Customer is required.'),
+    commodityDescription: z.string().min(2, 'Commodity description is required.'),
+    bagsStored: z.coerce.number().int().positive('Number of bags must be a positive number.'),
+    hamaliRate: z.coerce.number().positive('Hamali rate must be a positive number.'),
+});
+
+export type InflowFormState = {
+    message: string;
+    success: boolean;
+};
+
+export async function addInflow(prevState: InflowFormState, formData: FormData) {
+    const validatedFields = InflowSchema.safeParse({
+        customerId: formData.get('customerId'),
+        commodityDescription: formData.get('commodityDescription'),
+        bagsStored: formData.get('bagsStored'),
+        hamaliRate: formData.get('hamaliRate'),
+    });
+
+    if (!validatedFields.success) {
+        const error = validatedFields.error.flatten().fieldErrors;
+        const message = Object.values(error).flat().join(', ');
+        return { message: `Invalid data: ${message}`, success: false };
+    }
+
+    const { bagsStored, hamaliRate } = validatedFields.data;
+
+    const hamaliCharges = bagsStored * hamaliRate;
+    const initialRent = bagsStored * RATE_6_MONTHS;
+    const totalBilled = hamaliCharges + initialRent;
+    
+    const newRecord = {
+        id: `rec_${Date.now()}`,
+        ...validatedFields.data,
+        storageStartDate: new Date(),
+        storageEndDate: null,
+        billingCycle: '6-Month Initial' as const,
+        totalBilled,
+        hamaliCharges,
+    };
+
+    storageRecords.unshift(newRecord);
+
+    revalidatePath('/');
+    revalidatePath('/billing');
+    redirect('/');
 }
