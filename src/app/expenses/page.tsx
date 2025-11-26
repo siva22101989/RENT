@@ -75,15 +75,6 @@ export default async function ExpensesPage() {
             </CardContent>
         </Card>
       </div>
-
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Expense Tracking Coming Soon</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>The full expense tracking feature is currently under development. Please check back later!</p>
-        </CardContent>
-      </Card>
     </AppLayout>
   );
 }
