@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { format } from "date-fns";
 import type { Customer, StorageRecord } from "@/lib/definitions";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,6 @@ export function ReportTable({ records, customers, title }: ReportTableProps) {
         setGeneratedDate(format(new Date(), 'dd MMM yyyy, hh:mm a'));
     }, []);
 
-
     const getCustomerName = (customerId: string) => {
         return customers.find(c => c.id === customerId)?.name ?? 'Unknown';
     }
@@ -42,6 +41,8 @@ export function ReportTable({ records, customers, title }: ReportTableProps) {
         const dateB = b.storageStartDate instanceof Date ? b.storageStartDate.getTime() : 0;
         return dateB - dateA;
     });
+
+    const totalBalanceDue = recordsWithBalance.reduce((acc, record) => acc + record.balanceDue, 0);
 
     return (
         <div className="bg-white p-4 rounded-lg">
@@ -96,6 +97,14 @@ export function ReportTable({ records, customers, title }: ReportTableProps) {
                         </TableRow>
                     )}
                 </TableBody>
+                <TableFooter>
+                    <TableRow>
+                        <TableCell colSpan={7} className="text-right font-bold text-lg">Total Balance Due</TableCell>
+                        <TableCell className="text-right font-mono font-bold text-lg text-destructive">
+                            {formatCurrency(totalBalanceDue)}
+                        </TableCell>
+                    </TableRow>
+                </TableFooter>
             </Table>
         </div>
     );
