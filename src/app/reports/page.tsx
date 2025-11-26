@@ -26,7 +26,8 @@ export default async function ReportsPage() {
     
     const recordsWithBalance = allRecords.map(record => {
         const totalBilled = record.hamaliPayable + (record.totalRentBilled || 0);
-        const amountPaid = record.payments.reduce((acc, p) => acc + p.amount, 0);
+        // Ensure payments is an array before calling reduce
+        const amountPaid = (record.payments || []).reduce((acc, p) => acc + p.amount, 0);
         const balanceDue = totalBilled - amountPaid;
         return { ...record, totalBilled, amountPaid, balanceDue };
     }).sort((a, b) => {
