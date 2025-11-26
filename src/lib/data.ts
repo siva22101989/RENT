@@ -6,9 +6,9 @@ export const RATE_1_YEAR = 55;
 
 // Mock Data
 export const customers: Customer[] = [
-  { id: 'cust_1', name: 'Global Agri Co.', email: 'contact@globalagri.com' },
-  { id: 'cust_2', name: 'Grain Traders Inc.', email: 'trading@graininc.com' },
-  { id: 'cust_3', name: 'Farm Supplies Ltd.', email: 'supplies@farm.co' },
+  { id: 'cust_1', name: 'Global Agri Co.', email: 'contact@globalagri.com', phone: '9876543210', address: '123 Agri Street, Farmville' },
+  { id: 'cust_2', name: 'Grain Traders Inc.', email: 'trading@graininc.com', phone: '8765432109', address: '456 Market Road, Tradeton' },
+  { id: 'cust_3', name: 'Farm Supplies Ltd.', email: 'supplies@farm.co', phone: '7654321098', address: '789 Supply Lane, Harvestburg' },
 ];
 
 export const storageRecords: StorageRecord[] = [
