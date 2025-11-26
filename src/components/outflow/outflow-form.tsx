@@ -37,6 +37,7 @@ export function OutflowForm({ records, customers }: { records: StorageRecord[], 
     const initialState: OutflowFormState = { message: '', success: false };
     const [state, formAction] = useActionState(addOutflow, initialState);
 
+    const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
     const [selectedRecordId, setSelectedRecordId] = useState<string>('');
     const [bagsToWithdraw, setBagsToWithdraw] = useState(0);
     const [withdrawalDate, setWithdrawalDate] = useState(new Date());
@@ -46,6 +47,7 @@ export function OutflowForm({ records, customers }: { records: StorageRecord[], 
     const [rentPerBag, setRentPerBag] = useState({ totalOwed: 0 });
     const [hamaliPending, setHamaliPending] = useState(0);
 
+    const filteredRecords = selectedCustomerId ? records.filter(r => r.customerId === selectedCustomerId) : [];
     const selectedRecord = records.find(r => r.id === selectedRecordId);
     const totalPayable = finalRent + hamaliPending;
 
@@ -88,6 +90,17 @@ export function OutflowForm({ records, customers }: { records: StorageRecord[], 
             setHamaliPending(0);
         }
     }, [selectedRecord, bagsToWithdraw, withdrawalDate]);
+    
+    const handleCustomerChange = (customerId: string) => {
+        setSelectedCustomerId(customerId);
+        setSelectedRecordId('');
+        setBagsToWithdraw(0);
+        // Also reset calculation states
+        setFinalRent(0);
+        setStorageMonths(0);
+        setRentPerBag({ totalOwed: 0 });
+        setHamaliPending(0);
+    }
 
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const dateValue = e.target.valueAsDate ? new Date(e.target.valueAsDate.valueOf() + e.target.valueAsDate.getTimezoneOffset() * 60 * 1000) : new Date();
@@ -100,27 +113,45 @@ export function OutflowForm({ records, customers }: { records: StorageRecord[], 
             <Card>
                 <CardHeader>
                 <CardTitle>Withdrawal Details</CardTitle>
-                <CardDescription>Select a record and enter withdrawal information.</CardDescription>
+                <CardDescription>Select a customer, then choose a record and enter withdrawal information.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="recordId">Storage Record</Label>
-                        <Select name="recordId" required onValueChange={setSelectedRecordId}>
-                            <SelectTrigger id="recordId">
-                                <SelectValue placeholder="Select a record..." />
+                        <Label htmlFor="customerId">Customer</Label>
+                        <Select onValueChange={handleCustomerChange} required>
+                            <SelectTrigger id="customerId">
+                                <SelectValue placeholder="Select a customer..." />
                             </SelectTrigger>
                             <SelectContent>
-                                {records.map(record => {
-                                    const customer = customers.find(c => c.id === record.customerId);
-                                    return (
-                                        <SelectItem key={record.id} value={record.id}>
-                                            {record.id} - {customer?.name} ({record.commodityDescription})
-                                        </SelectItem>
-                                    )
-                                })}
+                                {customers.map(customer => (
+                                    <SelectItem key={customer.id} value={customer.id}>
+                                        {customer.name}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>
+
+                    {selectedCustomerId && (
+                        <div className="space-y-2">
+                            <Label htmlFor="recordId">Storage Record</Label>
+                            <Select name="recordId" onValueChange={setSelectedRecordId} value={selectedRecordId} required>
+                                <SelectTrigger id="recordId">
+                                    <SelectValue placeholder="Select a record..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {filteredRecords.length > 0 ? filteredRecords.map(record => (
+                                        <SelectItem key={record.id} value={record.id}>
+                                            {record.id} - ({record.commodityDescription})
+                                        </SelectItem>
+                                    )) : (
+                                        <SelectItem value="none" disabled>No active records for this customer</SelectItem>
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+
 
                     {selectedRecord && (
                         <>

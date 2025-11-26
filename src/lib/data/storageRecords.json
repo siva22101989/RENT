@@ -6,8 +6,8 @@
     "location": "A3",
     "bagsStored": 50,
     "storageStartDate": "2025-04-26T00:00:00.000Z",
-    "storageEndDate": null,
-    "billingCycle": "6-Month Initial",
+    "storageEndDate": "2025-11-26T00:00:00.000Z",
+    "billingCycle": "Completed",
     "amountPaid": 3750,
     "hamaliPayable": 1000
   },
@@ -17,11 +17,12 @@
     "commodityDescription": "PADDY",
     "bagsStored": 100,
     "storageStartDate": "2024-01-26T00:00:00.000Z",
-    "storageEndDate": null,
-    "billingCycle": "6-Month Initial",
+    "storageEndDate": "2025-11-26T00:00:00.000Z",
+    "billingCycle": "Completed",
     "totalBilled": 4600,
     "hamaliCharges": 1000,
-    "location": "A1"
+    "location": "A1",
+    "amountPaid": null
   },
   {
     "id": "rec_1764151938191",
