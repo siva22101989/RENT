@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { calculateFinalRent } from '@/lib/billing';
+import { format } from 'date-fns';
 
 function SubmitButton() {
     const { pending } = useFormStatus();
@@ -110,6 +111,9 @@ export function OutflowForm({ records, customers }: { records: StorageRecord[], 
 
                     {selectedRecord && (
                         <>
+                             <div className="text-sm text-muted-foreground p-2 bg-secondary/50 rounded-md">
+                                Inflow Date: <span className="font-medium text-foreground">{format(selectedRecord.storageStartDate, 'dd MMM yyyy')}</span>
+                            </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="bagsToWithdraw">Bags to Withdraw</Label>
