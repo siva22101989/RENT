@@ -55,9 +55,8 @@ export function OutflowReceipt({ record, customer, withdrawnBags, finalRent, pai
 
         // Recalculate pending hamali based on what was *originally* owed vs paid
         const originalHamaliPayable = record.hamaliPayable;
-        const totalPaidBeforeThisTx = record.amountPaid - paidNow; // Subtract current payment to get previous total
-        const hamaliPaidBeforeThisTx = totalPaidBeforeThisTx; // Assuming all previous payments went to hamali first
-        const pending = originalHamaliPayable - hamaliPaidBeforeThisTx;
+        const totalPaidBeforeThisTx = record.payments.reduce((acc, p) => acc + p.amount, 0) - paidNow;
+        const pending = originalHamaliPayable - totalPaidBeforeThisTx;
 
         setHamaliPending(pending > 0 ? pending : 0);
         

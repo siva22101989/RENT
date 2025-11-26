@@ -62,6 +62,10 @@ export function EditStorageDialog({ record, customers, children }: { record: Sto
       });
     }
   }, [state, toast]);
+  
+  // Note: This dialog does not allow editing the payment history directly.
+  // We are passing a simplified `amountPaid` for display purposes if needed,
+  // but it is not submitted.
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -71,7 +75,7 @@ export function EditStorageDialog({ record, customers, children }: { record: Sto
           <DialogHeader>
             <DialogTitle>Edit Storage Record</DialogTitle>
             <DialogDescription>
-              Adjust the details for record {record.id}.
+              Adjust the details for record {record.id}. Payment history cannot be edited here.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -141,20 +145,6 @@ export function EditStorageDialog({ record, customers, children }: { record: Sto
                 type="number"
                 step="0.01"
                 defaultValue={record.hamaliPayable} 
-                className="col-span-3" 
-                required 
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="amountPaid" className="text-right">
-                Amount Paid
-              </Label>
-              <Input 
-                id="amountPaid" 
-                name="amountPaid" 
-                type="number"
-                step="0.01"
-                defaultValue={record.amountPaid} 
                 className="col-span-3" 
                 required 
               />

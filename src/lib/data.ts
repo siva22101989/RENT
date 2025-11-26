@@ -1,6 +1,7 @@
+
 'use server';
 
-import type { Customer, StorageRecord } from '@/lib/definitions';
+import type { Customer, StorageRecord, Payment } from '@/lib/definitions';
 import fs from 'fs/promises';
 import path from 'path';
 import { unstable_cache as cache, revalidateTag } from 'next/cache';
@@ -19,8 +20,13 @@ async function readJsonFile<T>(filePath: string): Promise<T[]> {
     if (filePath === storageRecordsPath) {
         return (data as any[]).map(record => ({
             ...record,
-            storageStartDate: new Date(record.storageStartDate),
+            storageStartDate: record.storageStartDate ? new Date(record.storageStartDate) : new Date(),
             storageEndDate: record.storageEndDate ? new Date(record.storageEndDate) : null,
+            // Migrate old 'amountPaid' to new 'payments' array and ensure it always exists
+            payments: record.payments 
+              ? record.payments.map((p: any) => ({ ...p, date: new Date(p.date) })) 
+              : (record.amountPaid ? [{ amount: record.amountPaid, date: new Date(record.storageStartDate) }] : []),
+            amountPaid: undefined, // remove old field
         })) as T[];
     }
     return data as T[];
@@ -39,11 +45,22 @@ async function readJsonFile<T>(filePath: string): Promise<T[]> {
 async function writeJsonFile<T>(filePath: string, data: T[]): Promise<void> {
   try {
     await fs.mkdir(dataDir, { recursive: true });
-    await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+    // When writing, ensure payments array is correctly formatted
+    const dataToWrite = filePath === storageRecordsPath
+        ? (data as StorageRecord[]).map(record => {
+            const { ...rest } = record;
+            // The 'amountPaid' property is deprecated and should not be saved.
+            // It was a virtual property during migration.
+            return rest;
+          })
+        : data;
+
+    await fs.writeFile(filePath, JSON.stringify(dataToWrite, null, 2), 'utf-8');
   } catch (error) {
     console.error(`Error writing file ${filePath}:`, error);
   }
 }
+
 
 // Cached data access functions
 export const customers = cache(

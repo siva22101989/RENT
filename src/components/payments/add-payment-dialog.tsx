@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import type { StorageRecord } from '@/lib/definitions';
+import { format } from 'date-fns';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -85,6 +86,19 @@ export function AddPaymentDialog({ record }: { record: StorageRecord & { balance
                 step="0.01"
                 placeholder="0.00"
                 defaultValue={record.balanceDue.toFixed(2)}
+                className="col-span-3" 
+                required 
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="paymentDate" className="text-right">
+                Pay Date
+              </Label>
+              <Input 
+                id="paymentDate" 
+                name="paymentDate" 
+                type="date"
+                defaultValue={new Date().toISOString().split('T')[0]}
                 className="col-span-3" 
                 required 
               />

@@ -26,8 +26,9 @@ export default async function ReportsPage() {
     
     const recordsWithBalance = allRecords.map(record => {
         const totalBilled = record.hamaliPayable + (record.totalRentBilled || 0);
-        const balanceDue = totalBilled - record.amountPaid;
-        return { ...record, totalBilled, balanceDue };
+        const amountPaid = record.payments.reduce((acc, p) => acc + p.amount, 0);
+        const balanceDue = totalBilled - amountPaid;
+        return { ...record, totalBilled, amountPaid, balanceDue };
     }).sort((a, b) => {
         const dateA = a.storageStartDate instanceof Date ? a.storageStartDate.getTime() : 0;
         const dateB = b.storageStartDate instanceof Date ? b.storageStartDate.getTime() : 0;

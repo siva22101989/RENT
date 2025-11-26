@@ -23,7 +23,9 @@ export function InflowReceipt({ record, customer }: { record: StorageRecord, cus
     const receiptRef = useRef<HTMLDivElement>(null);
     const [formattedDate, setFormattedDate] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
-    const hamaliPending = record.hamaliPayable - record.amountPaid;
+    
+    const amountPaid = record.payments.reduce((acc, p) => acc + p.amount, 0);
+    const hamaliPending = record.hamaliPayable - amountPaid;
 
     useEffect(() => {
         setFormattedDate(format(new Date(record.storageStartDate), 'dd MMM yyyy, hh:mm a'));
@@ -100,7 +102,7 @@ export function InflowReceipt({ record, customer }: { record: StorageRecord, cus
                                 </div>
                                 <div className="flex justify-between font-bold text-base">
                                     <span>Hamali Charges Paid</span>
-                                    <span>{formatCurrency(record.amountPaid)}</span>
+                                    <span>{formatCurrency(amountPaid)}</span>
                                 </div>
                                  <div className="flex justify-between font-medium text-destructive">
                                     <span>Hamali Charges Pending</span>

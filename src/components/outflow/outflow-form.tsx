@@ -70,7 +70,8 @@ export function OutflowForm({ records, customers }: { records: StorageRecord[], 
 
     useEffect(() => {
         if (selectedRecord) {
-            const pending = selectedRecord.hamaliPayable - selectedRecord.amountPaid;
+            const amountPaid = selectedRecord.payments.reduce((acc, p) => acc + p.amount, 0);
+            const pending = selectedRecord.hamaliPayable - amountPaid;
             setHamaliPending(pending > 0 ? pending : 0);
 
             if (bagsToWithdraw > 0) {

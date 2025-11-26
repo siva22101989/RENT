@@ -4,9 +4,8 @@
 import { z } from 'zod';
 import { storageRecords, customers, saveCustomers, saveStorageRecords } from '@/lib/data';
 import { redirect } from 'next/navigation';
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { detectStorageAnomalies as detectStorageAnomaliesFlow } from '@/ai/flows/anomaly-detection';
-import { calculateFinalRent } from '@/lib/billing';
 
 const NewCustomerSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -93,6 +92,10 @@ export async function addInflow(prevState: InflowFormState, formData: FormData) 
     const { bagsStored, hamaliRate, hamaliPaid, storageStartDate, ...rest } = validatedFields.data;
 
     const hamaliPayable = bagsStored * hamaliRate;
+    const payments = [];
+    if (hamaliPaid && hamaliPaid > 0) {
+        payments.push({ amount: hamaliPaid, date: new Date(storageStartDate) });
+    }
     
     const newRecord = {
         id: `rec_${Date.now()}`,
@@ -101,7 +104,7 @@ export async function addInflow(prevState: InflowFormState, formData: FormData) 
         storageStartDate: new Date(storageStartDate),
         storageEndDate: null,
         billingCycle: '6-Month Initial' as const,
-        amountPaid: hamaliPaid || 0,
+        payments: payments,
         hamaliPayable: hamaliPayable,
         totalRentBilled: 0,
     };
@@ -160,15 +163,17 @@ export async function addOutflow(prevState: OutflowFormState, formData: FormData
     const isFullWithdrawal = bagsToWithdraw === originalRecord.bagsStored;
     const paymentMade = amountPaidNow || 0;
 
+    if (paymentMade > 0) {
+        originalRecord.payments.push({ amount: paymentMade, date: new Date(withdrawalDate) });
+    }
+
     if (isFullWithdrawal) {
         originalRecord.storageEndDate = new Date(withdrawalDate);
         originalRecord.billingCycle = 'Completed';
-        originalRecord.amountPaid += paymentMade;
         originalRecord.totalRentBilled += finalRent;
     } else {
         // Partial withdrawal: update bag count and add rent to total billed.
         originalRecord.bagsStored -= bagsToWithdraw;
-        originalRecord.amountPaid += paymentMade;
         originalRecord.totalRentBilled += finalRent;
     }
     
@@ -186,7 +191,6 @@ const StorageRecordSchema = z.object({
   location: z.string().min(1, 'Location is required.'),
   bagsStored: z.coerce.number().int().positive('Bags must be a positive number.'),
   hamaliPayable: z.coerce.number().nonnegative('Hamali charges must be a non-negative number.'),
-  amountPaid: z.coerce.number().nonnegative('Total billed must be a non-negative number.'),
   storageStartDate: z.string().refine(val => !isNaN(Date.parse(val)), { message: "Invalid date format" }),
 });
 
@@ -198,7 +202,6 @@ export async function updateStorageRecord(recordId: string, prevState: InflowFor
         location: formData.get('location'),
         bagsStored: formData.get('bagsStored'),
         hamaliPayable: formData.get('hamaliPayable'),
-        amountPaid: formData.get('amountPaid'),
         storageStartDate: formData.get('storageStartDate'),
     });
 
@@ -216,10 +219,16 @@ export async function updateStorageRecord(recordId: string, prevState: InflowFor
     }
 
     const originalRecord = currentRecords[recordIndex];
+    // Note: This simplified update doesn't allow changing payment history directly.
+    // We're preserving the existing payments array.
 
     currentRecords[recordIndex] = {
         ...originalRecord,
-        ...validatedFields.data,
+        customerId: validatedFields.data.customerId,
+        commodityDescription: validatedFields.data.commodityDescription,
+        location: validatedFields.data.location,
+        bagsStored: validatedFields.data.bagsStored,
+        hamaliPayable: validatedFields.data.hamaliPayable,
         storageStartDate: new Date(validatedFields.data.storageStartDate),
     };
 
@@ -233,6 +242,7 @@ export async function updateStorageRecord(recordId: string, prevState: InflowFor
 const PaymentSchema = z.object({
   recordId: z.string(),
   paymentAmount: z.coerce.number().positive('Payment amount must be a positive number.'),
+  paymentDate: z.string().refine(val => !isNaN(Date.parse(val)), { message: "Invalid date format" }),
 });
 
 export type PaymentFormState = {
@@ -244,6 +254,7 @@ export async function addPayment(prevState: PaymentFormState, formData: FormData
     const validatedFields = PaymentSchema.safeParse({
         recordId: formData.get('recordId'),
         paymentAmount: formData.get('paymentAmount'),
+        paymentDate: formData.get('paymentDate'),
     });
 
     if (!validatedFields.success) {
@@ -253,7 +264,7 @@ export async function addPayment(prevState: PaymentFormState, formData: FormData
     }
     
     const currentRecords = await storageRecords();
-    const { recordId, paymentAmount } = validatedFields.data;
+    const { recordId, paymentAmount, paymentDate } = validatedFields.data;
     
     const recordIndex = currentRecords.findIndex(r => r.id === recordId);
     
@@ -261,7 +272,10 @@ export async function addPayment(prevState: PaymentFormState, formData: FormData
         return { message: 'Record not found.', success: false };
     }
     
-    currentRecords[recordIndex].amountPaid += paymentAmount;
+    currentRecords[recordIndex].payments.push({
+        amount: paymentAmount,
+        date: new Date(paymentDate),
+    });
     
     await saveStorageRecords(currentRecords);
     
