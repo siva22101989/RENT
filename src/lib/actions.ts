@@ -6,7 +6,7 @@ import { storageRecords, customers, saveCustomers, saveStorageRecords } from '@/
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { detectStorageAnomalies as detectStorageAnomaliesFlow } from '@/ai/flows/anomaly-detection';
-import { calculateFinalRent, RATE_6_MONTHS } from '@/lib/billing';
+import { calculateFinalRent, RATE_6_MONTHS, RATE_1_YEAR } from '@/lib/billing';
 
 const NewCustomerSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -54,9 +54,7 @@ export async function addCustomer(prevState: FormState, formData: FormData) {
     currentCustomers.unshift(newCustomer);
     await saveCustomers(currentCustomers);
     
-    // No longer needed due to revalidateTag
-    // revalidatePath('/customers');
-    // revalidatePath('/inflow');
+    revalidateTag('customers');
     redirect('/customers');
 }
 
@@ -106,10 +104,7 @@ export async function addInflow(prevState: InflowFormState, formData: FormData) 
     currentRecords.unshift(newRecord);
     await saveStorageRecords(currentRecords);
 
-    // No longer needed due to revalidateTag
-    // revalidatePath('/');
-    // revalidatePath('/billing');
-    // revalidatePath('/inflow');
+    revalidateTag('storageRecords');
     redirect('/');
 }
 
@@ -191,9 +186,67 @@ export async function addOutflow(prevState: OutflowFormState, formData: FormData
 
     await saveStorageRecords(currentRecords);
     
-    // No longer needed due to revalidateTag
-    // revalidatePath('/');
-    // revalidatePath('/billing');
-    // revalidatePath('/outflow');
+    revalidateTag('storageRecords');
     redirect('/billing');
+}
+
+const BillingRecordSchema = z.object({
+  recordId: z.string(),
+  totalBilled: z.coerce.number().positive('Total billed amount must be a positive number.'),
+  storageEndDate: z.string().refine(val => !isNaN(Date.parse(val)), { message: "Invalid date format" }),
+});
+
+export type BillingFormState = {
+    message: string;
+    success: boolean;
+};
+
+export async function updateBillingRecord(prevState: BillingFormState, formData: FormData) {
+    const validatedFields = BillingRecordSchema.safeParse({
+        recordId: formData.get('recordId'),
+        totalBilled: formData.get('totalBilled'),
+        storageEndDate: formData.get('storageEndDate'),
+    });
+
+    if (!validatedFields.success) {
+        const error = validatedFields.error.flatten().fieldErrors;
+        const message = Object.values(error).flat().join(', ');
+        return { message: `Invalid data: ${message}`, success: false };
+    }
+
+    const currentRecords = await storageRecords();
+    const { recordId, totalBilled, storageEndDate } = validatedFields.data;
+    
+    const recordIndex = currentRecords.findIndex(r => r.id === recordId);
+
+    if (recordIndex === -1) {
+        return { message: 'Record not found.', success: false };
+    }
+
+    currentRecords[recordIndex] = {
+        ...currentRecords[recordIndex],
+        totalBilled,
+        storageEndDate: new Date(storageEndDate),
+    };
+
+    await saveStorageRecords(currentRecords);
+
+    revalidateTag('storageRecords');
+    return { message: 'Record updated successfully.', success: true };
+}
+
+
+export async function deleteBillingRecord(formData: FormData) {
+    const recordId = formData.get('recordId') as string;
+    if (!recordId) {
+        // This should not happen if the form is set up correctly
+        return;
+    }
+
+    let currentRecords = await storageRecords();
+    currentRecords = currentRecords.filter(r => r.id !== recordId);
+    await saveStorageRecords(currentRecords);
+
+    revalidateTag('storageRecords');
+    // No redirect needed, just revalidation will refresh the page data
 }
