@@ -1,4 +1,6 @@
+'use client';
 
+import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import type { Customer, StorageRecord } from "@/lib/definitions";
@@ -19,6 +21,13 @@ type ReportTableProps = {
 }
 
 export function ReportTable({ records, customers, title }: ReportTableProps) {
+    const [generatedDate, setGeneratedDate] = useState('');
+
+    useEffect(() => {
+        setGeneratedDate(format(new Date(), 'dd MMM yyyy, hh:mm a'));
+    }, []);
+
+
     const getCustomerName = (customerId: string) => {
         return customers.find(c => c.id === customerId)?.name ?? 'Unknown';
     }
@@ -39,7 +48,9 @@ export function ReportTable({ records, customers, title }: ReportTableProps) {
              <div className="mb-4">
                 <h2 className="text-xl font-bold">Srilakshmi Warehouse</h2>
                 <p className="text-muted-foreground">{title}</p>
-                <p className="text-xs text-muted-foreground">Generated on: {format(new Date(), 'dd MMM yyyy, hh:mm a')}</p>
+                {generatedDate && (
+                    <p className="text-xs text-muted-foreground">Generated on: {generatedDate}</p>
+                )}
             </div>
             <Table>
                 <TableHeader>
