@@ -31,14 +31,7 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutGrid },
   { href: '/inflow', label: 'Inflow', icon: ArrowDownToDot },
   { href: '/outflow', label: 'Outflow', icon: ArrowUpFromDot },
-  { 
-    label: 'Payments', 
-    icon: CreditCard,
-    subItems: [
-        { href: '/payments/pending', label: 'Pending Payments' },
-        { href: '/payments', label: 'Payment History' },
-    ]
-  },
+  { href: '/payments/pending', label: 'Payments', icon: CreditCard },
   { href: '/billing', label: 'History', icon: History },
   { href: '/customers', label: 'Customers', icon: Users },
   { href: '/reports', label: 'Reports', icon: FileText },
@@ -89,7 +82,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href}
+                    isActive={pathname.startsWith(item.href) && (item.href !== '/' || pathname === '/')}
                     tooltip={{ children: item.label }}
                     >
                     <Link href={item.href}>
