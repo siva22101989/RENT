@@ -1,12 +1,12 @@
 'use client';
 
+import React, { useEffect, useState, useMemo } from 'react';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { useEffect } from 'react';
 import { format } from 'date-fns';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { withdrawGoods, type FormState } from '@/lib/actions';
-import type { StorageRecord } from '@/lib/definitions';
+import type { Customer, StorageRecord } from '@/lib/definitions';
 import { customers } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -17,14 +17,15 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
-import React from 'react';
+import { calculateFinalRent, getRecordStatus } from '@/lib/billing';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending}>
       {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-      Confirm Withdrawal
+      Confirm Withdrawal & Generate Bill
     </Button>
   );
 }
@@ -33,14 +34,35 @@ function getCustomerName(customerId: string) {
     return customers.find(c => c.id === customerId)?.name ?? 'Unknown';
 }
 
-export function WithdrawGoodsForm({ records }: { records: StorageRecord[] }) {
+function formatCurrency(amount: number) {
+    return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 2,
+    }).format(amount);
+}
+
+export function WithdrawGoodsForm({ records, customers }: { records: StorageRecord[], customers: Customer[] }) {
   const { toast } = useToast();
-  const [selectedDate, setSelectedDate] = React.useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
+  const [selectedRecordId, setSelectedRecordId] = useState<string>('');
+
+  const [bill, setBill] = useState<{rent: number, total: number} | null>(null);
   
   const [state, formAction] = useActionState<FormState, FormData>(withdrawGoods, {
     message: '',
     success: false,
   });
+
+  const filteredRecords = useMemo(() => {
+    if (!selectedCustomerId) return [];
+    return records.filter(r => r.customerId === selectedCustomerId);
+  }, [selectedCustomerId, records]);
+
+  const selectedRecord = useMemo(() => {
+    return records.find(r => r.id === selectedRecordId);
+  }, [selectedRecordId, records]);
 
   useEffect(() => {
     if (state.message && !state.success) {
@@ -52,25 +74,49 @@ export function WithdrawGoodsForm({ records }: { records: StorageRecord[] }) {
     }
   }, [state, toast]);
 
+  useEffect(() => {
+    if (selectedRecord) {
+      const { rent } = calculateFinalRent(selectedRecord, selectedDate);
+      setBill({ rent, total: selectedRecord.totalBilled + rent });
+    } else {
+      setBill(null);
+    }
+  }, [selectedRecord, selectedDate])
+
   return (
     <form action={formAction}>
       <Card>
         <CardHeader>
           <CardTitle>Goods Withdrawal</CardTitle>
-          <CardDescription>Select a record to mark as withdrawn.</CardDescription>
+          <CardDescription>Select a customer and record to calculate the final bill and mark as withdrawn.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6">
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
                  <div className="space-y-2">
-                    <Label htmlFor="recordId">Storage Record</Label>
-                    <Select name="recordId" required>
+                    <Label htmlFor="customerId">Customer</Label>
+                    <Select onValueChange={setSelectedCustomerId} required>
                         <SelectTrigger>
-                            <SelectValue placeholder="Select a record to withdraw" />
+                            <SelectValue placeholder="Select a customer" />
                         </SelectTrigger>
                         <SelectContent>
-                            {records.map((record) => (
+                            {customers.map((customer) => (
+                            <SelectItem key={customer.id} value={customer.id}>
+                                {customer.name}
+                            </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="recordId">Storage Record</Label>
+                    <Select name="recordId" required onValueChange={setSelectedRecordId} disabled={!selectedCustomerId}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a record" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {filteredRecords.map((record) => (
                             <SelectItem key={record.id} value={record.id}>
-                                {`ID: ${record.id} - ${getCustomerName(record.customerId)} - ${record.bagsStored} bags`}
+                                {`ID: ${record.id} - ${record.commodityDescription} - ${record.bagsStored} bags`}
                             </SelectItem>
                             ))}
                         </SelectContent>
@@ -87,6 +133,7 @@ export function WithdrawGoodsForm({ records }: { records: StorageRecord[] }) {
                                 "w-full justify-start text-left font-normal",
                                 !selectedDate && "text-muted-foreground"
                             )}
+                            disabled={!selectedRecordId}
                             >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
@@ -103,10 +150,52 @@ export function WithdrawGoodsForm({ records }: { records: StorageRecord[] }) {
                     </Popover>
                 </div>
             </div>
+            
+            {selectedRecord && bill && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Final Bill Summary</CardTitle>
+                        <CardDescription>
+                            For Record ID: {selectedRecord.id} ({selectedRecord.commodityDescription})
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell className="font-medium">Commodity</TableCell>
+                                    <TableCell>{selectedRecord.commodityDescription}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className="font-medium">Quantity</TableCell>
+                                    <TableCell>{selectedRecord.bagsStored} bags</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className="font-medium">Storage Period</TableCell>
+                                    <TableCell>{format(selectedRecord.storageStartDate, 'dd MMM yyyy')} to {format(selectedDate, 'dd MMM yyyy')}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className="font-medium">Previously Billed</TableCell>
+                                    <TableCell>{formatCurrency(selectedRecord.totalBilled)}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className="font-medium">Final Rent Due</TableCell>
+                                    <TableCell>{formatCurrency(bill.rent)}</TableCell>
+                                </TableRow>
+                                <TableRow className="font-bold text-lg bg-muted/50">
+                                    <TableCell>Total Payable Amount</TableCell>
+                                    <TableCell className="text-right">{formatCurrency(bill.rent)}</TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            )}
+
             <Alert variant="default" className="bg-amber-50 border-amber-200">
                 <AlertTitle className="text-amber-800 font-semibold">Important Notice</AlertTitle>
                 <AlertDescription className="text-amber-700">
-                No refund is due for early withdrawal as the full 6-month or 1-year minimum fee was paid upon entry or rollover. This action will mark the record as completed.
+                A minimum rent is charged for pre-defined periods (6 months or 1 year). The final rent shown is any outstanding amount for the current billing cycle. This action will mark the record as completed and generate a final bill.
                 </AlertDescription>
             </Alert>
         </CardContent>

@@ -1,4 +1,4 @@
-import { differenceInCalendarMonths, addMonths, isAfter, startOfDay } from 'date-fns';
+import { differenceInCalendarMonths, addMonths, isAfter, startOfDay, differenceInDays } from 'date-fns';
 import type { StorageRecord } from '@/lib/definitions';
 import { RATE_6_MONTHS, RATE_1_YEAR } from '@/lib/data';
 
@@ -17,7 +17,7 @@ export function getRecordStatus(record: StorageRecord): RecordStatusInfo {
     return {
       status: `Withdrawn`,
       nextBillingDate: null,
-      currentRate: record.totalBilled / record.bagsStored,
+      currentRate: 0,
       alert: null,
     };
   }
@@ -56,4 +56,27 @@ export function getRecordStatus(record: StorageRecord): RecordStatusInfo {
   const nextBillingDate = addMonths(startDate, 6);
   const status = 'Active - 6-Month Term';
   return { status, nextBillingDate, currentRate: RATE_6_MONTHS, alert };
+}
+
+
+export function calculateFinalRent(record: StorageRecord, withdrawalDate: Date): { rent: number } {
+  const statusInfo = getRecordStatus(record);
+
+  // If a renewal or rollover alert is active, it means payment is due
+  // The amount is the difference between the new rate and the old rate, or the full new rate
+  if (statusInfo.alert) {
+    if (statusInfo.alert.includes('Rollover')) {
+      // Top-up from 6-month rate to 1-year rate
+      const rentDue = (RATE_1_YEAR - RATE_6_MONTHS) * record.bagsStored;
+      return { rent: rentDue > 0 ? rentDue : 0 };
+    }
+    if (statusInfo.alert.includes('Renewal')) {
+      // New 1-year term rent
+      const rentDue = RATE_1_YEAR * record.bagsStored;
+      return { rent: rentDue > 0 ? rentDue : 0 };
+    }
+  }
+
+  // If no alert, no additional rent is due upon withdrawal as it's pre-paid for the term.
+  return { rent: 0 };
 }

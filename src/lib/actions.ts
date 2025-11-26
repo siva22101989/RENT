@@ -5,6 +5,7 @@ import { storageRecords } from '@/lib/data';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { detectStorageAnomalies as detectStorageAnomaliesFlow } from '@/ai/flows/anomaly-detection';
+import { calculateFinalRent } from './billing';
 
 const NewStorageSchema = z.object({
   customerId: z.string().min(1, 'Customer is required.'),
@@ -60,6 +61,7 @@ export async function addStorageRecord(prevState: FormState, formData: FormData)
 
   storageRecords.unshift(newRecord);
   revalidatePath('/');
+  revalidatePath('/billing');
   redirect('/');
 }
 
@@ -88,11 +90,18 @@ export async function withdrawGoods(prevState: FormState, formData: FormData) {
         return { message: 'Record not found.', success: false };
     }
 
+    const record = storageRecords[recordIndex];
+
+    const { rent } = calculateFinalRent(record, storageEndDate);
+
     storageRecords[recordIndex].storageEndDate = storageEndDate;
     storageRecords[recordIndex].billingCycle = 'Completed';
+    storageRecords[recordIndex].totalBilled += rent;
 
     revalidatePath('/');
-    redirect('/');
+    revalidatePath('/withdraw');
+    revalidatePath('/billing');
+    redirect('/billing');
 }
 
 
