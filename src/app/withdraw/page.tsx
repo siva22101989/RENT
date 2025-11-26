@@ -8,7 +8,7 @@ export default function WithdrawPage() {
   return (
     <AppLayout>
       <PageHeader
-        title="Withdraw Goods"
+        title="Add Outflow"
         description="Mark a storage record as completed and set the withdrawal date."
       />
       <WithdrawGoodsForm records={activeRecords} />

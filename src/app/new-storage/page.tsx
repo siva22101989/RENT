@@ -7,7 +7,7 @@ export default function NewStoragePage() {
   return (
     <AppLayout>
       <PageHeader
-        title="New Storage Entry"
+        title="Add Inflow"
         description="Create a new storage record and calculate initial rent."
       />
       <NewStorageForm customers={customers} />
