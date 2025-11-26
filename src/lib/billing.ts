@@ -49,27 +49,27 @@ export function calculateFinalRent(
   const rentAlreadyPaidPerBag = 0; // Rent is never paid in advance.
 
   let totalRentOwedPerBag = 0;
+  const monthsStored = differenceInMonths(endDate, startDate);
 
   const sixMonthsLater = addMonths(startDate, 6);
   const twelveMonthsLater = addMonths(startDate, 12);
 
-  // If withdrawal is within the first 6 months, charge the 6-month rate.
-  if (!isAfter(endDate, sixMonthsLater)) {
+  // If withdrawal is within the first 6 months (0-6 months), charge the 6-month rate.
+  if (monthsStored <= 6) {
     totalRentOwedPerBag = RATE_6_MONTHS;
   } 
-  // If withdrawal is after 6 months but within the first year, charge the 1-year rate.
-  else if (!isAfter(endDate, twelveMonthsLater)) {
+  // If withdrawal is after 6 months but within the first year (7-12 months), charge the 1-year rate.
+  else if (monthsStored <= 12) {
     totalRentOwedPerBag = RATE_1_YEAR;
   } 
   // If withdrawal is after 1 year, charge based on the number of years.
   else {
-    const years = differenceInYears(endDate, startDate);
-    // e.g., 13 months is 1 year diff, needs 2 years rent. 25 months is 2 years diff, needs 3 years rent.
-    totalRentOwedPerBag = RATE_1_YEAR * (years + 1);
+    // Calculate years. 13 months is the start of year 2. 25 months is the start of year 3.
+    const years = Math.ceil(monthsStored / 12);
+    totalRentOwedPerBag = RATE_1_YEAR * years;
   }
   
   const finalRentForWithdrawnBags = totalRentOwedPerBag * bagsToWithdraw;
-  const monthsStored = differenceInMonths(endDate, startDate);
 
   return { 
       rent: Math.max(0, finalRentForWithdrawnBags),
