@@ -1,25 +1,70 @@
-// This file is a barrel for all things related to Firebase.
-// It re-exports hooks, providers, and initialization functions.
-
-import { doc, collection, query, where, orderBy, getDocs, onSnapshot } from 'firebase/firestore';
+'use client';
+import {
+  doc,
+  collection,
+  query,
+  where,
+  orderBy,
+  getDocs,
+  onSnapshot,
+  DocumentData,
+  Query,
+  DocumentReference,
+} from 'firebase/firestore';
 import { useUser } from './auth/use-user';
+import { useState, useEffect } from 'react';
 
-// Re-exporting hooks and utilities
 export { useUser, doc, collection, query, where, orderBy, getDocs, onSnapshot };
 
-// Re-exporting providers and context hooks
 export * from './provider';
 
-// Placeholder for custom hooks.
-// In a real app, you would have files like `useCollection.ts` and `useDoc.ts`
-// For now, we'll define them here conceptually.
+export function useCollection<T>(q: Query<DocumentData> | null) {
+  const [data, setData] = useState<T[] | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export const useCollection = (query: any) => {
-  // Dummy implementation
-  return { data: [], loading: true };
-};
+  useEffect(() => {
+    if (!q) {
+      setData([]);
+      setLoading(false);
+      return;
+    };
+    
+    setLoading(true);
+    const unsubscribe = onSnapshot(q, snapshot => {
+      const docs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as T[];
+      setData(docs);
+      setLoading(false);
+    });
 
-export const useDoc = (ref: any) => {
-  // Dummy implementation
-  return { data: null, loading: true };
-};
+    return () => unsubscribe();
+  }, [q]);
+
+  return { data, loading };
+}
+
+export function useDoc<T>(ref: DocumentReference<DocumentData> | null) {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!ref) {
+        setData(null);
+        setLoading(false);
+        return;
+    }
+
+    setLoading(true);
+    const unsubscribe = onSnapshot(ref, doc => {
+      if (doc.exists()) {
+        setData({ ...doc.data(), id: doc.id } as T);
+      } else {
+        setData(null);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [ref]);
+
+  return { data, loading };
+}
