@@ -10,7 +10,7 @@ import { calculateFinalRent } from '@/lib/billing';
 
 const NewCustomerSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
-  email: z.string().email('Invalid email address.'),
+  email: z.string().optional(),
   phone: z.string().min(10, 'Phone number must be at least 10 digits.'),
   address: z.string().min(5, 'Address must be at least 5 characters.'),
 });
@@ -46,12 +46,14 @@ export async function addCustomer(prevState: FormState, formData: FormData) {
     const newCustomer = {
         id: `cust_${Date.now()}`,
         ...validatedFields.data,
+        email: validatedFields.data.email ?? '',
     };
 
     customers.unshift(newCustomer);
     
     revalidatePath('/customers');
     revalidatePath('/inflow');
+    revalidatePath('/outflow');
     redirect('/customers');
 }
 
@@ -101,6 +103,7 @@ export async function addInflow(prevState: InflowFormState, formData: FormData) 
 
     revalidatePath('/');
     revalidatePath('/billing');
+    revalidatePath('/inflow');
     redirect('/');
 }
 
@@ -145,5 +148,6 @@ export async function addOutflow(prevState: OutflowFormState, formData: FormData
 
     revalidatePath('/');
     revalidatePath('/billing');
+    revalidatePath('/outflow');
     redirect('/billing');
 }
