@@ -1,7 +1,5 @@
 import { AppLayout } from "@/components/layout/app-layout";
 import { PageHeader } from "@/components/shared/page-header";
-import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -12,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { customers } from "@/lib/data";
 import { Card, CardContent } from "@/components/ui/card";
+import { AddCustomerDialog } from "@/components/customers/add-customer-dialog";
 
 export default function CustomersPage() {
   return (
@@ -20,10 +19,7 @@ export default function CustomersPage() {
         title="Customers"
         description="Manage your customers."
       >
-        <Button>
-            <PlusCircle className="mr-2" />
-            Add Customer
-        </Button>
+        <AddCustomerDialog />
       </PageHeader>
       <Card>
         <CardContent>
