@@ -64,23 +64,34 @@ export function getRecordStatus(record: StorageRecord): RecordStatusInfo {
 
 
 export function calculateFinalRent(record: StorageRecord, withdrawalDate: Date, bagsToWithdraw: number): { rent: number } {
-  const statusInfo = getRecordStatus(record);
+  const today = startOfDay(withdrawalDate);
+  const startDate = record.storageStartDate;
+  
+  // Calculate months stored at the time of withdrawal
+  const monthsStored = differenceInCalendarMonths(today, startDate);
 
-  // If a renewal or rollover alert is active, it means payment is due
-  // The amount is the difference between the new rate and the old rate, or the full new rate
-  if (statusInfo.alert) {
-    if (statusInfo.alert.includes('Rollover')) {
-      // Top-up from 6-month rate to 1-year rate
-      const rentDue = (RATE_1_YEAR - RATE_6_MONTHS) * bagsToWithdraw;
-      return { rent: rentDue > 0 ? rentDue : 0 };
-    }
-    if (statusInfo.alert.includes('Renewal')) {
-      // New 1-year term rent
-      const rentDue = RATE_1_YEAR * bagsToWithdraw;
-      return { rent: rentDue > 0 ? rentDue : 0 };
-    }
+  let rentDue = 0;
+
+  // Case 1: Withdrawal within the initial 6-month period, but after the 6-month mark passes.
+  // This triggers a rollover to the 1-year rate.
+  if (monthsStored >= 6 && monthsStored < 12 && record.billingCycle === '6-Month Initial') {
+      // The user has already paid for 6 months, so they owe the difference for the 1-year rate.
+      rentDue = (RATE_1_YEAR - RATE_6_MONTHS) * bagsToWithdraw;
+  }
+  // Case 2: Withdrawal after a 12-month period has passed.
+  // This triggers a renewal for another year.
+  else if (monthsStored >= 12) {
+      const yearsStored = Math.floor(monthsStored / 12);
+      const renewalDate = addMonths(startDate, yearsStored * 12);
+
+      // If the withdrawal happens on or after the renewal date for the next year, a new year's rent is due.
+      if (isAfter(today, renewalDate) || today.getTime() === renewalDate.getTime()) {
+          rentDue = RATE_1_YEAR * bagsToWithdraw;
+      }
   }
 
-  // If no alert, no additional rent is due upon withdrawal as it's pre-paid for the term.
-  return { rent: 0 };
+  // If no specific condition is met, it means withdrawal is happening within a pre-paid period
+  // (e.g., within the first 5 months of the 6-month term, or within a paid year).
+  // In those cases, no *additional* rent is due for the withdrawal itself.
+  return { rent: rentDue > 0 ? rentDue : 0 };
 }
