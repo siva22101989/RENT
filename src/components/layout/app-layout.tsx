@@ -15,7 +15,7 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Archive, LayoutGrid, PlusCircle, ShieldAlert, Users, Package, FileText, IndianRupee } from 'lucide-react';
+import { LayoutGrid, ShieldAlert, Users, Package, FileText, IndianRupee } from 'lucide-react';
 import { Logo } from './logo';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -23,8 +23,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutGrid },
-  { href: '/new-storage', label: 'Add Inflow', icon: PlusCircle },
-  { href: '/withdraw', label: 'Add Outflow', icon: Archive },
   { href: '/billing', label: 'Billing', icon: IndianRupee },
   { href: '/customers', label: 'Customers', icon: Users },
   { href: '/products', label: 'Products', icon: Package },
