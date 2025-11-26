@@ -1,12 +1,15 @@
 'use client';
 
-import { MoreHorizontal } from "lucide-react";
+import { Download, MoreHorizontal } from "lucide-react";
 import { Button } from "../ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import type { Customer, StorageRecord } from "@/lib/definitions";
 import { EditStorageDialog } from "./edit-storage-dialog";
+import { BillReceiptDialog } from "./bill-receipt-dialog";
 
 export function ActionsMenu({ record, customers }: { record: StorageRecord, customers: Customer[] }) {
+    const customer = customers.find(c => c.id === record.customerId);
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -21,7 +24,14 @@ export function ActionsMenu({ record, customers }: { record: StorageRecord, cust
                         Edit
                     </DropdownMenuItem>
                 </EditStorageDialog>
-                {/* We can add a delete option here in the future if needed */}
+                {customer && (
+                    <BillReceiptDialog record={record} customer={customer}>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Download Bill
+                        </DropdownMenuItem>
+                    </BillReceiptDialog>
+                )}
             </DropdownMenuContent>
         </DropdownMenu>
     );
