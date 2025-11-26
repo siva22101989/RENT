@@ -5,7 +5,7 @@ import { useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { addStorageRecord, type FormState } from '@/lib/actions';
@@ -25,7 +25,7 @@ const NewStorageSchema = z.object({
   commodityDescription: z.string().min(3, 'Commodity must be at least 3 characters.'),
   bagsStored: z.coerce.number().int().gt(0, 'Quantity must be a positive number.'),
   storageStartDate: z.date({ required_error: 'Storage date is required.' }),
-  hamaliCharges: z.coerce.number().min(0, 'Hamali charges must be a positive number.')
+  hamaliRate: z.coerce.number().min(0, 'Hamali rate must be a positive number.')
 });
 
 type NewStorageFormValues = z.infer<typeof NewStorageSchema>;
@@ -42,6 +42,7 @@ function SubmitButton() {
 
 export function NewStorageForm({ customers }: { customers: Customer[] }) {
   const { toast } = useToast();
+  const [totalHamali, setTotalHamali] = useState(0);
 
   const form = useForm<NewStorageFormValues>({
     resolver: zodResolver(NewStorageSchema),
@@ -50,9 +51,18 @@ export function NewStorageForm({ customers }: { customers: Customer[] }) {
       bagsStored: 0,
       commodityDescription: '',
       customerId: '',
-      hamaliCharges: 0,
+      hamaliRate: 0,
     },
   });
+
+  const bagsStored = form.watch('bagsStored');
+  const hamaliRate = form.watch('hamaliRate');
+
+  useEffect(() => {
+    const bags = form.getValues('bagsStored');
+    const rate = form.getValues('hamaliRate');
+    setTotalHamali(bags * rate);
+  }, [bagsStored, hamaliRate, form]);
 
   const [state, formAction] = useActionState<FormState, FormData>(addStorageRecord, {
     message: '',
@@ -103,7 +113,7 @@ export function NewStorageForm({ customers }: { customers: Customer[] }) {
               />
             </div>
           </div>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="bagsStored">Quantity (Bags)</Label>
               <Input
@@ -116,15 +126,23 @@ export function NewStorageForm({ customers }: { customers: Customer[] }) {
               />
             </div>
              <div className="space-y-2">
-              <Label htmlFor="hamaliCharges">Hamali Charges</Label>
+              <Label htmlFor="hamaliRate">Hamali Rate (per bag)</Label>
               <Input
-                id="hamaliCharges"
-                name="hamaliCharges"
+                id="hamaliRate"
+                name="hamaliRate"
                 type="number"
                 placeholder="0.00"
                 required
                 step="0.01"
-                {...form.register('hamaliCharges')}
+                {...form.register('hamaliRate')}
+              />
+            </div>
+             <div className="space-y-2">
+              <Label>Total Hamali Charges</Label>
+              <Input
+                value={totalHamali.toFixed(2)}
+                readOnly
+                className="bg-muted"
               />
             </div>
             <div className="space-y-2">

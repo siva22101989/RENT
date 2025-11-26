@@ -11,7 +11,7 @@ const NewStorageSchema = z.object({
   commodityDescription: z.string().min(1, 'Commodity description is required.'),
   bagsStored: z.coerce.number().gt(0, 'Quantity must be greater than 0.'),
   storageStartDate: z.coerce.date(),
-  hamaliCharges: z.coerce.number().min(0, 'Hamali charges must be a positive number.'),
+  hamaliRate: z.coerce.number().min(0, 'Hamali rate must be a positive number.'),
 });
 
 export type FormState = {
@@ -25,7 +25,7 @@ export async function addStorageRecord(prevState: FormState, formData: FormData)
     commodityDescription: formData.get('commodityDescription'),
     bagsStored: formData.get('bagsStored'),
     storageStartDate: formData.get('storageStartDate'),
-    hamaliCharges: formData.get('hamaliCharges'),
+    hamaliRate: formData.get('hamaliRate'),
   });
 
   if (!validatedFields.success) {
@@ -33,8 +33,8 @@ export async function addStorageRecord(prevState: FormState, formData: FormData)
     const fieldErrors = validatedFields.error.flatten().fieldErrors;
     if (fieldErrors.bagsStored) {
       errorMessage = fieldErrors.bagsStored[0];
-    } else if (fieldErrors.hamaliCharges) {
-        errorMessage = fieldErrors.hamaliCharges[0];
+    } else if (fieldErrors.hamaliRate) {
+        errorMessage = fieldErrors.hamaliRate[0];
     }
     return {
       message: errorMessage,
@@ -42,8 +42,10 @@ export async function addStorageRecord(prevState: FormState, formData: FormData)
     };
   }
 
-  const { customerId, commodityDescription, bagsStored, storageStartDate, hamaliCharges } = validatedFields.data;
+  const { customerId, commodityDescription, bagsStored, storageStartDate, hamaliRate } = validatedFields.data;
   
+  const hamaliCharges = bagsStored * hamaliRate;
+
   const newRecord = {
     id: `rec_${Date.now()}`,
     customerId,
