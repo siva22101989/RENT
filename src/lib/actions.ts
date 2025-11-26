@@ -2,10 +2,11 @@
 'use server';
 
 import { z } from 'zod';
-import { storageRecords, customers, RATE_6_MONTHS } from '@/lib/data';
+import { storageRecords, customers, RATE_6_MONTHS, RATE_1_YEAR } from '@/lib/data';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { detectStorageAnomalies as detectStorageAnomaliesFlow } from '@/ai/flows/anomaly-detection';
+import { calculateFinalRent } from '@/lib/billing';
 
 const NewCustomerSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -80,19 +81,19 @@ export async function addInflow(prevState: InflowFormState, formData: FormData) 
         return { message: `Invalid data: ${message}`, success: false };
     }
 
-    const { bagsStored, hamaliRate } = validatedFields.data;
+    const { bagsStored, hamaliRate, ...rest } = validatedFields.data;
 
     const hamaliCharges = bagsStored * hamaliRate;
     const initialRent = bagsStored * RATE_6_MONTHS;
-    const totalBilled = hamaliCharges + initialRent;
     
     const newRecord = {
         id: `rec_${Date.now()}`,
-        ...validatedFields.data,
+        ...rest,
+        bagsStored,
         storageStartDate: new Date(),
         storageEndDate: null,
         billingCycle: '6-Month Initial' as const,
-        totalBilled,
+        totalBilled: hamaliCharges + initialRent,
         hamaliCharges,
     };
 
@@ -101,4 +102,48 @@ export async function addInflow(prevState: InflowFormState, formData: FormData) 
     revalidatePath('/');
     revalidatePath('/billing');
     redirect('/');
+}
+
+const OutflowSchema = z.object({
+  recordId: z.string().min(1, 'Please select a record to withdraw.'),
+});
+
+export type OutflowFormState = {
+  message: string;
+  success: boolean;
+};
+
+export async function addOutflow(prevState: OutflowFormState, formData: FormData) {
+    const validatedFields = OutflowSchema.safeParse({
+        recordId: formData.get('recordId'),
+    });
+
+    if (!validatedFields.success) {
+        return { message: 'Invalid data submitted.', success: false };
+    }
+
+    const { recordId } = validatedFields.data;
+    const recordIndex = storageRecords.findIndex(r => r.id === recordId);
+
+    if (recordIndex === -1) {
+        return { message: 'Record not found.', success: false };
+    }
+
+    const record = storageRecords[recordIndex];
+    const withdrawalDate = new Date();
+
+    const { rent: additionalRent } = calculateFinalRent(record, withdrawalDate);
+
+    const updatedRecord = {
+        ...record,
+        storageEndDate: withdrawalDate,
+        totalBilled: record.totalBilled + additionalRent,
+        billingCycle: 'Completed' as const,
+    };
+    
+    storageRecords[recordIndex] = updatedRecord;
+
+    revalidatePath('/');
+    revalidatePath('/billing');
+    redirect('/billing');
 }

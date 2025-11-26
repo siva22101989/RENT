@@ -24,6 +24,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutGrid },
   { href: '/inflow', label: 'Inflow', icon: ArrowDownToDot },
+  { href: '/outflow', label: 'Outflow', icon: ArrowUpFromDot },
   { href: '/billing', label: 'Billing', icon: IndianRupee },
   { href: '/customers', label: 'Customers', icon: Users },
   { href: '/products', label: 'Products', icon: Package },
