@@ -67,10 +67,13 @@ export function OutflowForm({ records, customers }: { records: StorageRecord[], 
         return calculateFinalRent(selectedRecord, new Date(), bagsToWithdrawNum).rent;
     }, [selectedRecord, bagsToWithdrawNum]);
     
-    const hamaliPerBag = useMemo(() => {
-        if (!selectedRecord || !selectedRecord.bagsStored) return 0;
-        return selectedRecord.hamaliCharges / selectedRecord.bagsStored;
-    }, [selectedRecord]);
+    const pendingHamali = useMemo(() => {
+        if (!selectedRecord || !selectedRecord.bagsStored || bagsToWithdrawNum <= 0) return 0;
+        // Assuming hamali is charged on outflow. If it was charged on inflow, this would be 0.
+        // Let's assume the hamali stored is a per-bag rate.
+        const hamaliPerBag = selectedRecord.hamaliCharges / selectedRecord.bagsStored;
+        return hamaliPerBag * bagsToWithdrawNum;
+    }, [selectedRecord, bagsToWithdrawNum]);
 
 
     useEffect(() => {
@@ -136,7 +139,7 @@ export function OutflowForm({ records, customers }: { records: StorageRecord[], 
                                         <p className="text-muted-foreground">{selectedRecord.commodityDescription}</p>
                                     </div>
                                     <div>
-                                        <p className="font-medium">Total Bags Stored</p>
+                                        <p className="font-medium">Balance Bags</p>
                                         <p className="text-muted-foreground">{selectedRecord.bagsStored}</p>
                                     </div>
                                     <div>
@@ -167,8 +170,8 @@ export function OutflowForm({ records, customers }: { records: StorageRecord[], 
                                 </CardHeader>
                                 <CardContent className='space-y-3 text-green-800'>
                                      <div className="flex justify-between items-center font-medium">
-                                        <span>Pending Hamali Charges:</span>
-                                        <span className='font-mono'>{formatCurrency(hamaliPerBag * bagsToWithdrawNum)}</span>
+                                        <span>Pending Hamali Amount:</span>
+                                        <span className='font-mono'>{formatCurrency(pendingHamali)}</span>
                                     </div>
                                     <div className="flex justify-between items-center font-medium">
                                         <span>Additional Rent Due:</span>
@@ -176,7 +179,7 @@ export function OutflowForm({ records, customers }: { records: StorageRecord[], 
                                     </div>
                                     <div className="flex justify-between items-center font-bold text-lg border-t border-green-300 pt-3 mt-3">
                                         <span>Total Amount Due:</span>
-                                        <span className='font-mono'>{formatCurrency((hamaliPerBag * bagsToWithdrawNum) + additionalRent)}</span>
+                                        <span className='font-mono'>{formatCurrency(pendingHamali + additionalRent)}</span>
                                     </div>
                                 </CardContent>
                             </Card>
