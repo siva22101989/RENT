@@ -2,9 +2,7 @@
 import { AppLayout } from "@/components/layout/app-layout";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { PlusCircle, ArrowDown, ArrowUp, Warehouse } from "lucide-react";
+import { ArrowDown, ArrowUp, Warehouse } from "lucide-react";
 import { storageRecords as getStorageRecords } from "@/lib/data";
 
 export default async function StoragePage() {
@@ -22,14 +20,7 @@ export default async function StoragePage() {
       <PageHeader
         title="Storage Overview"
         description="A high-level summary of your warehouse inventory."
-      >
-        <Button asChild>
-            <Link href="/inflow">
-                <PlusCircle className="mr-2" />
-                Add Inflow
-            </Link>
-        </Button>
-      </PageHeader>
+      />
 
       <div className="grid gap-4 md:grid-cols-3 mb-6">
         <Card>
