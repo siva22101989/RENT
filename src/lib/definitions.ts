@@ -17,6 +17,7 @@ export type StorageRecord = {
   id: string;
   customerId: string;
   commodityDescription: string;
+  location: string;
   bagsStored: number;
   storageStartDate: Date;
   storageEndDate: Date | null;

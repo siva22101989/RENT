@@ -94,9 +94,15 @@ export function InflowForm({ customers }: { customers: Customer[] }) {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="commodityDescription">Commodity</Label>
-                        <Input id="commodityDescription" name="commodityDescription" placeholder="e.g., Wheat, Rice" required />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="commodityDescription">Commodity</Label>
+                            <Input id="commodityDescription" name="commodityDescription" placeholder="e.g., Wheat, Rice" required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="location">Location</Label>
+                            <Input id="location" name="location" placeholder="e.g., Aisle 3, Rack 2" required />
+                        </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">

@@ -97,6 +97,7 @@ export function InflowReceipt({ record, customer }: { record: StorageRecord, cus
                                 <h3 className="font-semibold mb-2">Storage Details</h3>
                                 <p><span className="font-medium">Date:</span> {formattedDate}</p>
                                 <p><span className="font-medium">Commodity:</span> {record.commodityDescription}</p>
+                                <p><span className="font-medium">Location:</span> {record.location}</p>
                                 <p><span className="font-medium">Number of Bags:</span> {record.bagsStored}</p>
                             </div>
                         </div>

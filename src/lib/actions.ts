@@ -61,6 +61,7 @@ export async function addCustomer(prevState: FormState, formData: FormData) {
 const InflowSchema = z.object({
     customerId: z.string().min(1, 'Customer is required.'),
     commodityDescription: z.string().min(2, 'Commodity description is required.'),
+    location: z.string().min(1, 'Location is required.'),
     bagsStored: z.coerce.number().int().positive('Number of bags must be a positive number.'),
     hamaliRate: z.coerce.number().positive('Hamali rate must be a positive number.'),
 });
@@ -74,6 +75,7 @@ export async function addInflow(prevState: InflowFormState, formData: FormData) 
     const validatedFields = InflowSchema.safeParse({
         customerId: formData.get('customerId'),
         commodityDescription: formData.get('commodityDescription'),
+        location: formData.get('location'),
         bagsStored: formData.get('bagsStored'),
         hamaliRate: formData.get('hamaliRate'),
     });
@@ -180,6 +182,7 @@ export async function deleteBillingRecord(formData: FormData) {
 const StorageRecordSchema = z.object({
   customerId: z.string().min(1, 'Customer is required.'),
   commodityDescription: z.string().min(2, 'Commodity description is required.'),
+  location: z.string().min(1, 'Location is required.'),
   bagsStored: z.coerce.number().int().positive('Bags must be a positive number.'),
   hamaliCharges: z.coerce.number().nonnegative('Hamali charges must be a non-negative number.'),
   totalBilled: z.coerce.number().nonnegative('Total billed must be a non-negative number.'),
@@ -191,6 +194,7 @@ export async function updateStorageRecord(recordId: string, prevState: InflowFor
     const validatedFields = StorageRecordSchema.safeParse({
         customerId: formData.get('customerId'),
         commodityDescription: formData.get('commodityDescription'),
+        location: formData.get('location'),
         bagsStored: formData.get('bagsStored'),
         hamaliCharges: formData.get('hamaliCharges'),
         totalBilled: formData.get('totalBilled'),

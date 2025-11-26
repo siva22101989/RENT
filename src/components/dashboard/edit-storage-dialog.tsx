@@ -106,6 +106,18 @@ export function EditStorageDialog({ record, customers, children }: { record: Sto
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="location" className="text-right">
+                Location
+              </Label>
+              <Input 
+                id="location" 
+                name="location"
+                defaultValue={record.location}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="bagsStored" className="text-right">
                 Bags Stored
               </Label>

@@ -37,6 +37,7 @@ export async function StorageTable() {
         <TableRow>
           <TableHead>Customer</TableHead>
           <TableHead>Commodity</TableHead>
+          <TableHead>Location</TableHead>
           <TableHead className="text-right">Bags</TableHead>
           <TableHead>Start Date</TableHead>
           <TableHead>Status</TableHead>
@@ -54,6 +55,7 @@ export async function StorageTable() {
               <TableRow key={record.id}>
                 <TableCell className="font-medium">{customerName}</TableCell>
                 <TableCell>{record.commodityDescription}</TableCell>
+                <TableCell>{record.location}</TableCell>
                 <TableCell className="text-right">{record.bagsStored}</TableCell>
                 <TableCell>{format(record.storageStartDate, 'dd MMM yyyy')}</TableCell>
                 <TableCell>
