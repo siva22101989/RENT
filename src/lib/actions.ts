@@ -163,6 +163,10 @@ export async function addOutflow(prevState: OutflowFormState, formData: FormData
     const isFullWithdrawal = bagsToWithdraw === originalRecord.bagsStored;
     const paymentMade = amountPaidNow || 0;
 
+    if (!originalRecord.payments) {
+      originalRecord.payments = [];
+    }
+
     if (paymentMade > 0) {
         originalRecord.payments.push({ amount: paymentMade, date: new Date(withdrawalDate) });
     }
@@ -272,7 +276,13 @@ export async function addPayment(prevState: PaymentFormState, formData: FormData
         return { message: 'Record not found.', success: false };
     }
     
-    currentRecords[recordIndex].payments.push({
+    const record = currentRecords[recordIndex];
+    
+    if (!record.payments) {
+        record.payments = [];
+    }
+
+    record.payments.push({
         amount: paymentAmount,
         date: new Date(paymentDate),
     });
