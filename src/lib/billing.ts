@@ -75,26 +75,28 @@ export function getRecordStatus(record: StorageRecord): RecordStatusInfo {
 export function calculateFinalRent(record: StorageRecord, withdrawalDate: Date, bagsToWithdraw: number): { rent: number } {
   const startDate = startOfDay(record.storageStartDate);
   const endDate = startOfDay(withdrawalDate);
-  const monthsStored = differenceInCalendarMonths(endDate, startDate);
-
+  
   const rentAlreadyPaidPerBag = (record.totalBilled - record.hamaliCharges) / record.bagsStored;
 
   let totalRentOwedPerBag = 0;
 
-  if (monthsStored < 6) {
-    // Withdrawing within the first 6 months. Rent is already covered.
-    totalRentOwedPerBag = RATE_6_MONTHS;
-  } else if (monthsStored < 12) {
-    // Withdrawing between 6 and 12 months. Owe the full year rate.
-    totalRentOwedPerBag = RATE_1_YEAR;
-  } else { // monthsStored >= 12
-    const yearsStored = Math.floor(monthsStored / 12);
-    // Total owed is for (yearsStored + 1) full years.
-    // e.g., stored for 13 months = 2 years of rent. 1 year + 1 renewal.
-    totalRentOwedPerBag = RATE_1_YEAR * (yearsStored + 1);
-  }
+  const sixMonthsLater = addMonths(startDate, 6);
+  const twelveMonthsLater = addMonths(startDate, 12);
 
-  const additionalRentForWithdrawnBags = (totalRentOwedPerBag - rentAlreadyPaidPerBag) * bagsToWithdraw;
+  if (!isAfter(endDate, sixMonthsLater)) {
+    // Withdrawal is on or before the 6-month mark. Rent is already covered.
+    totalRentOwedPerBag = RATE_6_MONTHS;
+  } else if (!isAfter(endDate, twelveMonthsLater)) {
+    // Withdrawal is after 6 months but on or before the 12-month mark. Owe the full year rate.
+    totalRentOwedPerBag = RATE_1_YEAR;
+  } else {
+    // Withdrawal is after 12 months.
+    const years = differenceInYears(endDate, startDate);
+    // e.g., 13 months is 1 year diff, needs 2 years rent. 25 months is 2 years diff, needs 3 years rent.
+    totalRentOwedPerBag = RATE_1_YEAR * (years + 1);
+  }
   
+  const additionalRentForWithdrawnBags = (totalRentOwedPerBag - rentAlreadyPaidPerBag) * bagsToWithdraw;
+
   return { rent: Math.max(0, additionalRentForWithdrawnBags) };
 }
