@@ -30,8 +30,10 @@ export function ReportTable({ records, customers, title }: ReportTableProps) {
         const balanceDue = totalBilled - amountPaid;
         return { ...record, totalBilled, amountPaid, balanceDue };
     }).sort((a, b) => {
-        const dateA = a.storageStartDate;
-        const dateB = b.storageStartDate;
+        // When data is passed from Server to Client component, Dates are serialized to strings.
+        // We need to convert them back to Date objects to sort them.
+        const dateA = new Date(a.storageStartDate);
+        const dateB = new Date(b.storageStartDate);
         return dateB.getTime() - dateA.getTime();
     });
 
@@ -68,9 +70,9 @@ export function ReportTable({ records, customers, title }: ReportTableProps) {
                         return (
                         <TableRow key={record.id}>
                             <TableCell className="font-medium">{customerName}</TableCell>
-                            <TableCell>{record.storageStartDate ? format(record.storageStartDate, 'dd MMM yyyy') : 'N/A'}</TableCell>
+                            <TableCell>{record.storageStartDate ? format(new Date(record.storageStartDate), 'dd MMM yyyy') : 'N/A'}</TableCell>
                             <TableCell>
-                                {record.storageEndDate ? format(record.storageEndDate, 'dd MMM yyyy') : 'N/A'}
+                                {record.storageEndDate ? format(new Date(record.storageEndDate), 'dd MMM yyyy') : 'N/A'}
                             </TableCell>
                             <TableCell>
                                 <Badge variant={record.storageEndDate ? "secondary" : "default"} className={record.storageEndDate ? 'bg-zinc-100 text-zinc-800' : 'bg-green-100 text-green-800'}>
