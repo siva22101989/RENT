@@ -67,17 +67,16 @@ export function OutflowForm({ records, customers }: { records: StorageRecord[], 
         return bagsToWithdrawNum > selectedRecord.bagsStored;
     }, [bagsToWithdrawNum, selectedRecord]);
 
-    const { additionalRent, pendingHamali } = useMemo(() => {
-        if (!selectedRecord || bagsToWithdrawNum <= 0) {
-            return { additionalRent: 0, pendingHamali: 0 };
-        }
+    // Removed useMemo to ensure calculation happens on every render
+    let additionalRent = 0;
+    let pendingHamali = 0;
+    if (selectedRecord && bagsToWithdrawNum > 0) {
         const billingInfo = calculateFinalRent(selectedRecord, new Date(), bagsToWithdrawNum);
-        
-        const hamaliPerBag = selectedRecord.bagsStored > 0 ? selectedRecord.hamaliCharges / selectedRecord.bagsStored : 0;
-        const currentPendingHamali = hamaliPerBag * bagsToWithdrawNum;
+        additionalRent = billingInfo.rent;
 
-        return { additionalRent: billingInfo.rent, pendingHamali: currentPendingHamali };
-    }, [selectedRecord, bagsToWithdrawNum]);
+        const hamaliPerBag = selectedRecord.bagsStored > 0 ? selectedRecord.hamaliCharges / selectedRecord.bagsStored : 0;
+        pendingHamali = hamaliPerBag * bagsToWithdrawNum;
+    }
     
 
     useEffect(() => {
@@ -165,7 +164,7 @@ export function OutflowForm({ records, customers }: { records: StorageRecord[], 
                                         if (selectedRecord && value > selectedRecord.bagsStored) {
                                             setBagsToWithdraw(selectedRecord.bagsStored);
                                         } else {
-                                            setBagsToWithdraw(value < 0 ? 0 : value);
+                                            setBagsToWithdraw(value < 0 ? '' : value);
                                         }
                                     }}
                                     max={selectedRecord.bagsStored}
