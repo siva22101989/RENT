@@ -44,12 +44,15 @@ export function AddCustomerDialog() {
   const [state, formAction] = useActionState(addCustomer, initialState);
 
   useEffect(() => {
+    // This effect will run when the form submission is complete.
+    // Since a successful submission now redirects, this toast will primarily
+    // be shown on failure. If it succeeds, the redirect happens before
+    // this component can re-render.
     if (state.message) {
       if (state.success) {
-        toast({
-          title: 'Success',
-          description: state.message,
-        });
+        // You can still show a success toast if you want, but the redirect
+        // is the primary feedback mechanism.
+        // toast({ title: 'Success', description: state.message });
         setIsOpen(false); 
       } else {
         toast({
