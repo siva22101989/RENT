@@ -2,8 +2,6 @@
 import { AppLayout } from "@/components/layout/app-layout";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { StorageTable } from "@/components/dashboard/storage-table";
-import { AddCustomerDialog } from "@/components/customers/add-customer-dialog";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, ArrowDown, ArrowUp, Warehouse } from "lucide-react";
@@ -22,8 +20,8 @@ export default async function StoragePage() {
   return (
     <AppLayout>
       <PageHeader
-        title="Active Storage"
-        description="An overview of all records currently in storage."
+        title="Storage Overview"
+        description="A high-level summary of your warehouse inventory."
       >
         <Button asChild>
             <Link href="/inflow">
@@ -62,15 +60,6 @@ export default async function StoragePage() {
             </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-            <CardTitle>Active Storage Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <StorageTable />
-        </CardContent>
-      </Card>
     </AppLayout>
   );
 }
