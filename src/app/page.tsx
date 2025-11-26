@@ -23,7 +23,7 @@ const navItems: NavItem[] = [
   { href: '/payments/pending', label: 'Payments', description: 'Manage pending payments.', icon: IndianRupee },
   { href: '/customers', label: 'Customers', description: 'View and manage customers.', icon: Users },
   { href: '/reports', label: 'Reports', description: 'See all transactions.', icon: FileText },
-  { href: '/expenses', label: 'Expenses', description: 'Track and manage expenses.', icon: CreditCard },
+  { href: '/expenses', label: 'Expenses', description: 'Track and manage expenses. (Coming Soon)', icon: CreditCard },
 ];
 
 function NavCard({ item }: { item: NavItem }) {
