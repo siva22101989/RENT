@@ -3,6 +3,7 @@
 import type { Customer, StorageRecord } from '@/lib/definitions';
 import fs from 'fs/promises';
 import path from 'path';
+import { unstable_cache as cache } from 'next/cache';
 
 // Data file paths
 const dataDir = path.join(process.cwd(), 'src', 'lib', 'data');
@@ -43,9 +44,10 @@ async function writeJsonFile<T>(filePath: string, data: T[]): Promise<void> {
   }
 }
 
-// Data access functions
-export const customers = async (): Promise<Customer[]> => readJsonFile<Customer>(customersPath);
-export const storageRecords = async (): Promise<StorageRecord[]> => readJsonFile<StorageRecord>(storageRecordsPath);
+// Cached data access functions
+export const customers = cache(async () => readJsonFile<Customer>(customersPath), ['customers'], { tags: ['customers'] });
+export const storageRecords = cache(async () => readJsonFile<StorageRecord>(storageRecordsPath), ['storageRecords'], { tags: ['storageRecords'] });
+
 
 // Data mutation functions
 export const saveCustomers = async (data: Customer[]): Promise<void> => writeJsonFile(customersPath, data);
