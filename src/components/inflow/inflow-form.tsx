@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { addInflow, type InflowFormState } from '@/lib/actions';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +33,10 @@ export function InflowForm({ customers }: { customers: Customer[] }) {
     const initialState: InflowFormState = { message: '', success: false };
     const [state, formAction] = useActionState(addInflow, initialState);
 
+    const [bags, setBags] = useState(0);
+    const [rate, setRate] = useState(0);
+    const [hamali, setHamali] = useState(0);
+
     useEffect(() => {
         if (state.message) {
             if (state.success) {
@@ -49,6 +53,12 @@ export function InflowForm({ customers }: { customers: Customer[] }) {
             }
         }
     }, [state, toast]);
+
+    useEffect(() => {
+        const bagsValue = bags || 0;
+        const rateValue = rate || 0;
+        setHamali(bagsValue * rateValue);
+    }, [bags, rate]);
 
 
   return (
@@ -81,11 +91,17 @@ export function InflowForm({ customers }: { customers: Customer[] }) {
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="bagsStored">Number of Bags</Label>
-                            <Input id="bagsStored" name="bagsStored" type="number" placeholder="0" required />
+                            <Input id="bagsStored" name="bagsStored" type="number" placeholder="0" required onChange={e => setBags(Number(e.target.value))}/>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="hamaliRate">Hamali Rate (per bag)</Label>
-                            <Input id="hamaliRate" name="hamaliRate" type="number" placeholder="0.00" step="0.01" required />
+                            <Input id="hamaliRate" name="hamaliRate" type="number" placeholder="0.00" step="0.01" required onChange={e => setRate(Number(e.target.value))}/>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Total Hamali Amount</Label>
+                        <div className="p-2 bg-muted rounded-md text-muted-foreground font-mono text-sm">
+                            ₹{hamali.toFixed(2)}
                         </div>
                     </div>
                 </CardContent>
