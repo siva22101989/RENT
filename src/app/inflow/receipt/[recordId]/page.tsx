@@ -6,9 +6,10 @@ import { storageRecords as getStorageRecords, customers as getCustomers } from "
 import { notFound } from "next/navigation";
 
 export default async function InflowReceiptPage({ params }: { params: { recordId: string } }) {
+  const { recordId } = params;
   const allRecords = await getStorageRecords();
   const allCustomers = await getCustomers();
-  const record = allRecords.find(r => r.id === params.recordId);
+  const record = allRecords.find(r => r.id === recordId);
 
   if (!record) {
     notFound();
