@@ -1,7 +1,9 @@
 
 import { AppLayout } from "@/components/layout/app-layout";
 import { PageHeader } from "@/components/shared/page-header";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PlusCircle } from "lucide-react";
 
 export default function ExpensesPage() {
   return (
@@ -9,7 +11,12 @@ export default function ExpensesPage() {
       <PageHeader
         title="Expenses"
         description="Track your warehouse operational expenses."
-      />
+      >
+        <Button>
+          <PlusCircle className="mr-2" />
+          Add Expense
+        </Button>
+      </PageHeader>
       <Card>
         <CardHeader>
           <CardTitle>Coming Soon</CardTitle>
