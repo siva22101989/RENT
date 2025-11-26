@@ -2,11 +2,11 @@
 'use server';
 
 import { z } from 'zod';
-import { storageRecords, customers, saveCustomers, saveStorageRecords, RATE_6_MONTHS } from '@/lib/data';
+import { storageRecords, customers, saveCustomers, saveStorageRecords } from '@/lib/data';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { detectStorageAnomalies as detectStorageAnomaliesFlow } from '@/ai/flows/anomaly-detection';
-import { calculateFinalRent } from '@/lib/billing';
+import { calculateFinalRent, RATE_6_MONTHS } from '@/lib/billing';
 
 const NewCustomerSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),

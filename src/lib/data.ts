@@ -1,17 +1,13 @@
+'use server';
 
 import type { Customer, StorageRecord } from '@/lib/definitions';
 import fs from 'fs/promises';
 import path from 'path';
 
-// Rates
-export const RATE_6_MONTHS = 36;
-export const RATE_1_YEAR = 55;
-
 // Data file paths
 const dataDir = path.join(process.cwd(), 'src', 'lib', 'data');
 const customersPath = path.join(dataDir, 'customers.json');
 const storageRecordsPath = path.join(dataDir, 'storageRecords.json');
-const productsPath = path.join(dataDir, 'products.json');
 
 // Helper function to read JSON file
 async function readJsonFile<T>(filePath: string): Promise<T[]> {

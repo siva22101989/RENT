@@ -1,7 +1,10 @@
 
 import { differenceInCalendarMonths, addMonths, isAfter, startOfDay, differenceInDays } from 'date-fns';
 import type { StorageRecord } from '@/lib/definitions';
-import { RATE_6_MONTHS, RATE_1_YEAR } from '@/lib/data';
+
+// Rates
+export const RATE_6_MONTHS = 36;
+export const RATE_1_YEAR = 55;
 
 export type RecordStatusInfo = {
   status: string;
