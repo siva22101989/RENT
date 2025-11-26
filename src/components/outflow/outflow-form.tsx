@@ -67,11 +67,15 @@ export function OutflowForm({ records, customers }: { records: StorageRecord[], 
         return bagsToWithdrawNum > selectedRecord.bagsStored;
     }, [bagsToWithdrawNum, selectedRecord]);
 
-    // Removed useMemo to ensure calculation happens on every render
     let additionalRent = 0;
     let pendingHamali = 0;
     if (selectedRecord && bagsToWithdrawNum > 0) {
-        const billingInfo = calculateFinalRent(selectedRecord, new Date(), bagsToWithdrawNum);
+        // Ensure storageStartDate is a Date object before passing it to the calculation function
+        const recordWithDate = {
+            ...selectedRecord,
+            storageStartDate: new Date(selectedRecord.storageStartDate),
+        };
+        const billingInfo = calculateFinalRent(recordWithDate, new Date(), bagsToWithdrawNum);
         additionalRent = billingInfo.rent;
 
         const hamaliPerBag = selectedRecord.bagsStored > 0 ? selectedRecord.hamaliCharges / selectedRecord.bagsStored : 0;
@@ -119,7 +123,7 @@ export function OutflowForm({ records, customers }: { records: StorageRecord[], 
                             <SelectContent>
                                 {records.map(record => (
                                     <SelectItem key={record.id} value={record.id}>
-                                        {getCustomerName(record.customerId, customers)} - {record.commodityDescription} ({record.bagsStored} bags) - In: {format(record.storageStartDate, 'dd MMM yyyy')}
+                                        {getCustomerName(record.customerId, customers)} - {record.commodityDescription} ({record.bagsStored} bags) - In: {format(new Date(record.storageStartDate), 'dd MMM yyyy')}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -147,7 +151,7 @@ export function OutflowForm({ records, customers }: { records: StorageRecord[], 
                                     </div>
                                     <div>
                                         <p className="font-medium">Storage Start Date</p>
-                                        <p className="text-muted-foreground">{format(selectedRecord.storageStartDate, 'dd MMM yyyy')}</p>
+                                        <p className="text-muted-foreground">{format(new Date(selectedRecord.storageStartDate), 'dd MMM yyyy')}</p>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -187,7 +191,7 @@ export function OutflowForm({ records, customers }: { records: StorageRecord[], 
                                         <span className='font-mono'>{formatCurrency(pendingHamali)}</span>
                                     </div>
                                     <div className="flex justify-between items-center font-medium">
-                                        <span>Rent for Bags Withdrawn:</span>
+                                        <span>RENT FOR BAGS SHOULD BE CLALUCULATED:</span>
                                         <span className='font-mono'>{formatCurrency(additionalRent)}</span>
                                     </div>
                                     <div className="flex justify-between items-center font-bold text-lg border-t border-green-300 pt-3 mt-3">
