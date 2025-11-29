@@ -4,7 +4,7 @@
 import { useActionState, useEffect, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { addInflow, type InflowFormState } from '@/lib/actions';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,7 +30,7 @@ function SubmitButton() {
     );
 }
 
-export function InflowForm({ customers }: { customers: Customer[] }) {
+export function InflowForm({ customers, nextSerialNumber }: { customers: Customer[], nextSerialNumber: string }) {
     const { toast } = useToast();
     const initialState: InflowFormState = { message: '', success: false };
     const [state, formAction] = useActionState(addInflow, initialState);
@@ -74,7 +74,10 @@ export function InflowForm({ customers }: { customers: Customer[] }) {
         <form action={formAction} className="w-full max-w-lg">
             <Card>
                 <CardHeader>
-                <CardTitle>New Storage Record Details</CardTitle>
+                    <CardTitle>New Storage Record Details</CardTitle>
+                    <CardDescription>
+                        Next Serial No: <span className="font-bold text-primary">{nextSerialNumber}</span>
+                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
