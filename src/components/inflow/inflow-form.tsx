@@ -42,6 +42,7 @@ export function InflowForm({ customers, nextSerialNumber }: { customers: Custome
     const [hamaliPaid, setHamaliPaid] = useState(0);
     const [selectedCustomerId, setSelectedCustomerId] = useState('');
     const [inflowType, setInflowType] = useState<'Direct' | 'Plot'>('Direct');
+    const [plotBags, setPlotBags] = useState(0);
 
     const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
 
@@ -63,12 +64,12 @@ export function InflowForm({ customers, nextSerialNumber }: { customers: Custome
     }, [state, toast]);
 
     useEffect(() => {
-        const bagsValue = bags || 0;
+        const bagsValue = inflowType === 'Plot' ? plotBags : bags;
         const rateValue = rate || 0;
         
-        const calculatedHamali = bagsValue * rateValue;
+        const calculatedHamali = (bagsValue || 0) * rateValue;
         setHamali(calculatedHamali);
-    }, [bags, rate]);
+    }, [bags, plotBags, rate, inflowType]);
 
 
   return (
@@ -134,7 +135,7 @@ export function InflowForm({ customers, nextSerialNumber }: { customers: Custome
                         <div className="grid grid-cols-2 gap-4">
                              <div className="space-y-2">
                                 <Label htmlFor="plotBags">Plot Bags</Label>
-                                <Input id="plotBags" name="plotBags" type="number" placeholder="0" />
+                                <Input id="plotBags" name="plotBags" type="number" placeholder="0" onChange={e => setPlotBags(Number(e.target.value))} />
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="loadBags">Load Bags</Label>
@@ -151,7 +152,7 @@ export function InflowForm({ customers, nextSerialNumber }: { customers: Custome
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="location">Lot No.</Label>
-                            <Input id="location" name="location" placeholder="e.g., E2/middle" required />
+                            <Input id="location" name="location" placeholder="e.g., E2/middle" />
                         </div>
                     </div>
                      <div className="grid grid-cols-2 gap-4">
@@ -173,7 +174,16 @@ export function InflowForm({ customers, nextSerialNumber }: { customers: Custome
                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="bagsStored">No. of Bags</Label>
-                            <Input id="bagsStored" name="bagsStored" type="number" placeholder="0" required onChange={e => setBags(Number(e.target.value))}/>
+                            <Input 
+                                id="bagsStored" 
+                                name="bagsStored" 
+                                type="number" 
+                                placeholder="0" 
+                                required 
+                                onChange={e => setBags(Number(e.target.value))}
+                                disabled={inflowType === 'Plot'}
+                                value={inflowType === 'Plot' ? '' : bags || ''}
+                            />
                         </div>
                          <div className="space-y-2">
                             <Label htmlFor="weight">Weight</Label>
