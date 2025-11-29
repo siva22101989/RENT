@@ -3,20 +3,20 @@
     "customerId": "CUST-1764398275149",
     "commodityDescription": "PADDY",
     "location": "B4",
-    "lorryTractorNo": "",
+    "lorryTractorNo": "TRACTOR",
     "weight": 0,
-    "id": "REC-1764403331571",
+    "id": "SLWH-1",
     "bagsStored": 200,
     "storageStartDate": "2025-11-28T00:00:00.000Z",
     "storageEndDate": null,
     "billingCycle": "6-Month Initial",
     "payments": [
       {
-        "amount": 7000,
+        "amount": 2000,
         "date": "2025-11-28T00:00:00.000Z"
       }
     ],
-    "hamaliPayable": 7000,
+    "hamaliPayable": 2000,
     "totalRentBilled": 0
   },
   {
@@ -25,7 +25,7 @@
     "location": "B6",
     "lorryTractorNo": "TRACTOR",
     "weight": 0,
-    "id": "REC-1764403474482",
+    "id": "SLWH-2",
     "bagsStored": 68,
     "storageStartDate": "2025-11-28T00:00:00.000Z",
     "storageEndDate": null,

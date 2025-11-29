@@ -1,3 +1,4 @@
+
 import type { Timestamp } from 'firebase/firestore';
 
 export type Customer = {
@@ -34,4 +35,7 @@ export type StorageRecord = {
   totalRentBilled: number;
   lorryTractorNo: string;
   weight: number;
+  inflowType?: 'Direct' | 'Plot';
+  plotBags?: number;
+  loadBags?: number;
 };

@@ -13,6 +13,7 @@ import type { Customer } from '@/lib/definitions';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Separator } from '../ui/separator';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 function SubmitButton() {
     const { pending } = useFormStatus();
@@ -40,6 +41,7 @@ export function InflowForm({ customers, nextSerialNumber }: { customers: Custome
     const [hamali, setHamali] = useState(0);
     const [hamaliPaid, setHamaliPaid] = useState(0);
     const [selectedCustomerId, setSelectedCustomerId] = useState('');
+    const [inflowType, setInflowType] = useState<'Direct' | 'Plot'>('Direct');
 
     const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
 
@@ -108,6 +110,39 @@ export function InflowForm({ customers, nextSerialNumber }: { customers: Custome
                             </div>
                         </div>
                     )}
+                    
+                    <div className="space-y-2">
+                        <Label>Inflow Type</Label>
+                        <RadioGroup 
+                            name="inflowType"
+                            defaultValue="Direct"
+                            className="flex gap-4"
+                            onValueChange={(value: 'Direct' | 'Plot') => setInflowType(value)}
+                        >
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="Direct" id="direct" />
+                                <Label htmlFor="direct">Direct</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="Plot" id="plot" />
+                                <Label htmlFor="plot">Plot</Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
+
+                    {inflowType === 'Plot' && (
+                        <div className="grid grid-cols-2 gap-4">
+                             <div className="space-y-2">
+                                <Label htmlFor="plotBags">Plot Bags</Label>
+                                <Input id="plotBags" name="plotBags" type="number" placeholder="0" />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="loadBags">Load Bags</Label>
+                                <Input id="loadBags" name="loadBags" type="number" placeholder="0" />
+                            </div>
+                        </div>
+                    )}
+
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">

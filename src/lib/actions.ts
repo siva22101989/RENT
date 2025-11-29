@@ -78,6 +78,9 @@ const InflowSchema = z.object({
     // For updating customer details from inflow form
     fatherName: z.string().optional(),
     village: z.string().optional(),
+    inflowType: z.enum(['Direct', 'Plot']).optional(),
+    plotBags: z.coerce.number().optional(),
+    loadBags: z.coerce.number().optional(),
 });
 
 export type InflowFormState = {
@@ -98,6 +101,9 @@ export async function addInflow(prevState: InflowFormState, formData: FormData) 
         weight: formData.get('weight'),
         fatherName: formData.get('fatherName'),
         village: formData.get('village'),
+        inflowType: formData.get('inflowType'),
+        plotBags: formData.get('plotBags'),
+        loadBags: formData.get('loadBags'),
     });
 
     if (!validatedFields.success) {
@@ -148,6 +154,9 @@ export async function addInflow(prevState: InflowFormState, formData: FormData) 
         totalRentBilled: 0,
         lorryTractorNo: rest.lorryTractorNo ?? '',
         weight: rest.weight ?? 0,
+        inflowType: rest.inflowType,
+        plotBags: rest.plotBags,
+        loadBags: rest.loadBags,
     };
 
     await saveStorageRecord(newRecord);

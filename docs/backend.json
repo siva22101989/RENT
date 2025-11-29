@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "customer": {
@@ -31,7 +32,7 @@
             "description": "The village of the customer."
         }
       },
-      "required": ["name", "phone", "address", "village"]
+      "required": ["name", "phone", "address"]
     },
     "storageRecord": {
       "title": "Storage Record",
@@ -90,6 +91,19 @@
         "weight": {
             "type": "number",
             "description": "The weight of the stored items."
+        },
+        "inflowType": {
+            "type": "string",
+            "enum": ["Direct", "Plot"],
+            "description": "The type of inflow, either Direct from the vehicle or from a Plot."
+        },
+        "plotBags": {
+            "type": "number",
+            "description": "Number of bags in the plot, if inflow type is 'Plot'."
+        },
+        "loadBags": {
+            "type": "number",
+            "description": "Number of bags loaded from the plot, if inflow type is 'Plot'."
         }
       },
       "required": [
@@ -98,11 +112,7 @@
         "location",
         "bagsStored",
         "storageStartDate",
-        "billingCycle",
-        "hamaliPayable",
-        "totalRentBilled",
-        "lorryTractorNo",
-        "weight"
+        "billingCycle"
       ]
     },
     "payment": {
