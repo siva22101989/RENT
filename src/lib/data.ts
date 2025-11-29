@@ -1,3 +1,4 @@
+
 'use server';
 
 import fs from 'fs/promises';
@@ -76,6 +77,15 @@ export const updateStorageRecord = async (id: string, data: Partial<StorageRecor
     allRecords[recordIndex] = { ...allRecords[recordIndex], ...data };
     await writeJsonFile(storageRecordsPath, allRecords);
 }
+
+export const deleteStorageRecord = async (id: string): Promise<void> => {
+    const allRecords = await storageRecords();
+    const updatedRecords = allRecords.filter(r => r.id !== id);
+    if (allRecords.length === updatedRecords.length) {
+        throw new Error("Record not found to delete");
+    }
+    await writeJsonFile(storageRecordsPath, updatedRecords);
+};
 
 export const addPaymentToRecord = async (recordId: string, payment: Payment) => {
     const allRecords = await storageRecords();

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,6 +7,8 @@ import { format } from "date-fns";
 import type { Customer, StorageRecord } from "@/lib/definitions";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, toDate } from '@/lib/utils';
+import { ActionsMenu } from "@/components/dashboard/actions-menu";
+
 
 type ReportTableProps = {
     records: StorageRecord[];
@@ -62,6 +65,7 @@ export function ReportTable({ records, customers, title }: ReportTableProps) {
                         <TableHead className="text-right">Total Billed</TableHead>
                         <TableHead className="text-right">Amount Paid</TableHead>
                         <TableHead className="text-right">Balance Due</TableHead>
+                        <TableHead className="w-[50px] text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -87,11 +91,14 @@ export function ReportTable({ records, customers, title }: ReportTableProps) {
                             <TableCell className={`text-right font-mono ${record.balanceDue > 0 ? 'text-destructive' : ''}`}>
                                 {formatCurrency(record.balanceDue || 0)}
                             </TableCell>
+                             <TableCell className="text-right">
+                                <ActionsMenu record={record} customers={customers} />
+                            </TableCell>
                         </TableRow>
                     )})}
                     {recordsWithBalance.length === 0 && (
                         <TableRow>
-                            <TableCell colSpan={8} className="text-center text-muted-foreground">
+                            <TableCell colSpan={9} className="text-center text-muted-foreground">
                                 No records found for the selected customer.
                             </TableCell>
                         </TableRow>
@@ -106,6 +113,7 @@ export function ReportTable({ records, customers, title }: ReportTableProps) {
                         <TableCell className="text-right font-mono font-bold text-lg text-destructive">
                             {formatCurrency(totalBalanceDue)}
                         </TableCell>
+                         <TableCell />
                     </TableRow>
                 </TableFooter>
             </Table>

@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { storageRecords, customers, saveCustomer, saveStorageRecord, updateStorageRecord, addPaymentToRecord, getStorageRecord } from '@/lib/data';
+import { storageRecords, customers, saveCustomer, saveStorageRecord, updateStorageRecord, addPaymentToRecord, getStorageRecord, deleteStorageRecord } from '@/lib/data';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { detectStorageAnomalies as detectStorageAnomaliesFlow } from '@/ai/flows/anomaly-detection';
@@ -275,4 +275,16 @@ export async function addPayment(prevState: PaymentFormState, formData: FormData
     revalidatePath('/payments/pending');
     revalidatePath('/reports');
     return { message: 'Payment recorded successfully.', success: true };
+}
+
+export async function deleteStorageRecordAction(recordId: string): Promise<FormState> {
+  try {
+    await deleteStorageRecord(recordId);
+    revalidatePath('/reports');
+    revalidatePath('/storage');
+    revalidatePath('/payments/pending');
+    return { message: 'Record deleted successfully.', success: true };
+  } catch (error) {
+    return { message: 'Failed to delete record.', success: false };
+  }
 }

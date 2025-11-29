@@ -1,12 +1,14 @@
+
 'use client';
 
-import { Download, MoreHorizontal } from "lucide-react";
+import { Download, MoreHorizontal, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import type { Customer, StorageRecord } from "@/lib/definitions";
 import { EditStorageDialog } from "./edit-storage-dialog";
 import { BillReceiptDialog } from "./bill-receipt-dialog";
 import { toDate } from "@/lib/utils";
+import { DeleteRecordDialog } from "./delete-record-dialog";
 
 export function ActionsMenu({ record, customers }: { record: StorageRecord, customers: Customer[] }) {
     const customer = customers.find(c => c.id === record.customerId);
@@ -15,7 +17,7 @@ export function ActionsMenu({ record, customers }: { record: StorageRecord, cust
         ...record,
         storageStartDate: toDate(record.storageStartDate),
         storageEndDate: record.storageEndDate ? toDate(record.storageEndDate) : null,
-        payments: record.payments.map(p => ({...p, date: toDate(p.date)}))
+        payments: (record.payments || []).map(p => ({...p, date: toDate(p.date)}))
     }
 
     return (
@@ -40,6 +42,13 @@ export function ActionsMenu({ record, customers }: { record: StorageRecord, cust
                         </DropdownMenuItem>
                     </BillReceiptDialog>
                 )}
+                <DropdownMenuSeparator />
+                <DeleteRecordDialog recordId={safeRecord.id}>
+                     <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                    </DropdownMenuItem>
+                </DeleteRecordDialog>
             </DropdownMenuContent>
         </DropdownMenu>
     );
