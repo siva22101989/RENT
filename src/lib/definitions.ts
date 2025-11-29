@@ -40,7 +40,7 @@ export type StorageRecord = {
   loadBags?: number;
 };
 
-export const expenseCategories = ["Worker Salary", "Petrol", "Maintenance", "Utilities", "Other"] as const;
+export const expenseCategories = ["Worker Salary", "Petrol", "Maintenance", "Utilities", "Hamali", "Other"] as const;
 
 export type ExpenseCategory = typeof expenseCategories[number];
 

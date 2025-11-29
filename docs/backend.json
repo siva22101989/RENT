@@ -147,7 +147,7 @@
           },
           "category": {
             "type": "string",
-            "enum": ["Worker Salary", "Petrol", "Maintenance", "Utilities", "Other"],
+            "enum": ["Worker Salary", "Petrol", "Maintenance", "Utilities", "Hamali", "Other"],
             "description": "The category of the expense."
           },
           "date": {
