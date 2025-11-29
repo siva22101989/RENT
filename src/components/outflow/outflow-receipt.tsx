@@ -4,7 +4,6 @@
 import { useRef, useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import type { Customer, StorageRecord } from '@/lib/definitions';
 import { format, differenceInDays, differenceInMonths } from 'date-fns';
@@ -12,6 +11,8 @@ import { Button } from '../ui/button';
 import { Download, Loader2 } from 'lucide-react';
 import { calculateFinalRent } from '@/lib/billing';
 import { formatCurrency, toDate } from '@/lib/utils';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+
 
 type OutflowReceiptProps = {
   record: StorageRecord;
@@ -28,7 +29,7 @@ export function OutflowReceipt({ record, customer, withdrawnBags, finalRent, pai
     const [isGenerating, setIsGenerating] = useState(false);
     
     const [duration, setDuration] = useState({ days: 0, months: 0 });
-    const [rentBreakdown, setRentBreakdown] = useState({ totalOwed: 0 });
+    const [rentBreakdown, setRentBreakdown] = useState({ totalOwedPerBag: 0 });
     const [hamaliPending, setHamaliPending] = useState(0);
 
     useEffect(() => {
@@ -41,7 +42,7 @@ export function OutflowReceipt({ record, customer, withdrawnBags, finalRent, pai
 
         setDuration({
             days: differenceInDays(endDate, startDate),
-            months: differenceInMonths(endDate, startDate)
+            months: differenceInMonths(endDate, startDate) || 1
         });
 
         const safeRecord = {
@@ -50,15 +51,23 @@ export function OutflowReceipt({ record, customer, withdrawnBags, finalRent, pai
         }
 
         const { totalRentOwedPerBag } = calculateFinalRent(safeRecord, endDate, withdrawnBags);
-        setRentBreakdown({ totalOwed: totalRentOwedPerBag });
+        setRentBreakdown({ totalOwedPerBag });
 
+        // Calculate hamali pending at the time of outflow
+        // Total Hamali - all payments made before outflow
         const originalHamaliPayable = record.hamaliPayable;
-        const totalPaidForHamali = (record.payments || [])
-            .filter(p => toDate(p.date) <= startDate)
+        
+        const totalPaidForHamaliAndRent = (record.payments || [])
+            .filter(p => toDate(p.date) <= endDate) // only payments made before or on outflow
             .reduce((acc, p) => acc + p.amount, 0);
         
-        const pending = originalHamaliPayable - totalPaidForHamali;
+        // This logic is tricky. Let's assume outflow `addPayment` action creates a new payment for the final settlement.
+        // The hamali pending is what was originally due minus what was paid *before* this final settlement.
+        const priorPayments = (record.payments || [])
+            .filter(p => toDate(p.date) < endDate)
+            .reduce((acc, p) => acc + p.amount, 0);
 
+        const pending = originalHamaliPayable - priorPayments;
         setHamaliPending(pending > 0 ? pending : 0);
         
     }, [record, withdrawnBags, paidNow]);
@@ -102,87 +111,99 @@ export function OutflowReceipt({ record, customer, withdrawnBags, finalRent, pai
     };
 
     if (!record) {
-        return <div className="max-w-2xl mx-auto">Loading receipt...</div>;
+        return <div className="max-w-3xl mx-auto">Loading receipt...</div>;
     }
 
     return (
-        <div className="max-w-2xl mx-auto">
-            <div ref={receiptRef} className="printable-area bg-white p-4">
-                <Card className="w-full shadow-none border-0">
-                    <CardHeader className="text-center">
-                        <CardTitle className="text-2xl">Srilakshmi Warehouse</CardTitle>
-                        <CardDescription>Outflow Bill / Final Statement</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                                <h3 className="font-semibold mb-2">Customer Details</h3>
-                                <p>{customer.name}</p>
-                                <p>{customer.address}</p>
-                                <p>Phone: {customer.phone}</p>
-                            </div>
-                             <div>
-                                <h3 className="font-semibold mb-2">Withdrawal Details</h3>
-                                <p><span className="font-medium">Date Out:</span> {formattedEndDate}</p>
-                                <p><span className="font-medium">Date In:</span> {formattedStartDate}</p>
-                                <p><span className="font-medium">Commodity:</span> {record.commodityDescription}</p>
-                                <p><span className="font-medium">Bags Withdrawn:</span> {withdrawnBags}</p>
-                            </div>
-                        </div>
-                        
-                        <div>
-                             <h3 className="font-semibold mb-2">Storage Duration</h3>
-                             <div className="flex justify-between text-sm">
-                                <span>Total Days</span>
-                                <span>{duration.days} days</span>
-                             </div>
-                             <div className="flex justify-between text-sm">
-                                <span>Total Months</span>
-                                <span>{duration.months} months</span>
-                             </div>
-                        </div>
+        <div className="max-w-3xl mx-auto bg-background p-4 sm:p-6 rounded-lg">
+            <div ref={receiptRef} className="printable-area bg-white p-6 sm:p-8">
+                {/* Header */}
+                <div className="flex justify-between items-start mb-8">
+                    <div>
+                        <h1 className="text-2xl font-bold text-primary">Srilakshmi Warehouse</h1>
+                        <p className="text-sm text-muted-foreground">Your Company Address, City, State, ZIP</p>
+                        <p className="text-sm text-muted-foreground">contact@yourwarehouse.com | (123) 456-7890</p>
+                    </div>
+                    <div className="text-right">
+                        <h2 className="text-xl font-semibold uppercase text-muted-foreground">Outflow Bill</h2>
+                        <p className="text-sm"><span className="font-medium">Bill #</span>: {record.id}</p>
+                        <p className="text-sm"><span className="font-medium">Date:</span> {formattedEndDate}</p>
+                    </div>
+                </div>
 
+                {/* Customer Info */}
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div>
+                        <h3 className="text-sm font-semibold mb-2 text-muted-foreground">BILL TO</h3>
+                        <p className="font-medium text-lg">{customer.name}</p>
+                        <p>{customer.address}</p>
+                        <p>Phone: {customer.phone}</p>
+                    </div>
+                     <div>
+                        <h3 className="text-sm font-semibold mb-2 text-muted-foreground">WITHDRAWAL DETAILS</h3>
+                        <p><span className="font-medium">Commodity:</span> {record.commodityDescription}</p>
+                        <p><span className="font-medium">Date In:</span> {formattedStartDate}</p>
+                        <p><span className="font-medium">Storage Duration:</span> {duration.months} months ({duration.days} days)</p>
+                    </div>
+                </div>
+
+                {/* Items Table */}
+                <div className="mb-8">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[50%]">Description</TableHead>
+                                <TableHead>Quantity</TableHead>
+                                <TableHead>Rate</TableHead>
+                                <TableHead className="text-right">Amount</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow>
+                                <TableCell>Rent</TableCell>
+                                <TableCell>{withdrawnBags} bags</TableCell>
+                                <TableCell>{formatCurrency(rentBreakdown.totalOwedPerBag)} / bag</TableCell>
+                                <TableCell className="text-right">{formatCurrency(finalRent)}</TableCell>
+                            </TableRow>
+                             <TableRow>
+                                <TableCell>Pending Hamali Charges</TableCell>
+                                <TableCell> - </TableCell>
+                                <TableCell> - </TableCell>
+                                <TableCell className="text-right">{formatCurrency(hamaliPending)}</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </div>
+
+                 {/* Totals Section */}
+                <div className="flex justify-end mb-8">
+                    <div className="w-full max-w-sm space-y-2 text-sm">
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Total Due</span>
+                            <span>{formatCurrency(totalPayable)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Amount Paid Now</span>
+                            <span>{formatCurrency(paidNow)}</span>
+                        </div>
                         <Separator />
-
-                        <div>
-                            <h3 className="font-semibold mb-2">Final Billing Summary</h3>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between items-center">
-                                    <span>Rent Due</span>
-                                    <span className='font-mono'>{withdrawnBags} bags &times; {formatCurrency(rentBreakdown.totalOwed)}/bag = {formatCurrency(finalRent)}</span>
-                                </div>
-                                 <div className="flex justify-between">
-                                    <span className="font-medium">Pending Hamali Charges</span>
-                                    <span className='font-mono'>{formatCurrency(hamaliPending)}</span>
-                                </div>
-                                <Separator className="my-2" />
-                                <div className="flex justify-between font-bold text-base">
-                                    <span>Total Payable</span>
-                                    <span>{formatCurrency(totalPayable)}</span>
-                                </div>
-                                <div className="flex justify-between font-bold text-base">
-                                    <span>Total Paid Now</span>
-                                    <span>{formatCurrency(paidNow)}</span>
-                                </div>
-                                <Separator className="my-2 border-dashed" />
-                                <div className="flex justify-between font-bold text-lg text-destructive">
-                                    <span>Balance Due</span>
-                                    <span>{formatCurrency(balanceDue)}</span>
-                                </div>
-                            </div>
+                        <div className="flex justify-between font-bold text-lg text-destructive">
+                            <span>Balance Due</span>
+                            <span>{formatCurrency(balanceDue)}</span>
                         </div>
+                    </div>
+                </div>
 
-                         <Separator />
+                <Separator className="my-8"/>
 
-                        <div className="text-xs text-muted-foreground space-y-2">
-                           <p>
-                                <strong>Notes:</strong>
-                                This bill reflects the final settlement for the withdrawal of goods. Thank you for your business.
-                            </p>
-                            <p>This is a computer-generated receipt and does not require a signature.</p>
-                        </div>
-                    </CardContent>
-                </Card>
+                {/* Footer */}
+                <div className="text-xs text-muted-foreground">
+                    <h4 className="font-semibold mb-2">Notes & Terms</h4>
+                    <p>
+                        This bill reflects the final settlement for the withdrawal of goods.
+                    </p>
+                    <p className="mt-4 text-center font-semibold">Thank you for your business!</p>
+                </div>
             </div>
             <div className="mt-6 flex justify-center print-hide">
                 <Button onClick={handleDownloadPdf} disabled={isGenerating}>
@@ -202,3 +223,4 @@ export function OutflowReceipt({ record, customer, withdrawnBags, finalRent, pai
         </div>
     );
 }
+

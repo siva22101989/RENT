@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
@@ -10,7 +11,7 @@ import { format } from 'date-fns';
 import { Button } from '../ui/button';
 import { Download, Loader2 } from 'lucide-react';
 import { formatCurrency, toDate } from '@/lib/utils';
-import type { Timestamp } from 'firebase/firestore';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 
 export function InflowReceipt({ record, customer }: { record: StorageRecord, customer: Customer }) {
     const receiptRef = useRef<HTMLDivElement>(null);
@@ -61,61 +62,85 @@ export function InflowReceipt({ record, customer }: { record: StorageRecord, cus
     };
 
     return (
-        <div className="max-w-2xl mx-auto">
-            <div ref={receiptRef} className="printable-area bg-white p-4">
-                <Card className="w-full shadow-none border-0">
-                    <CardHeader className="text-center">
-                        <CardTitle className="text-2xl">Srilakshmi Warehouse</CardTitle>
-                        <CardDescription>Inflow Bill</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                                <h3 className="font-semibold mb-2">Customer Details</h3>
-                                <p>{customer.name}</p>
-                                <p>{customer.address}</p>
-                                <p>Phone: {customer.phone}</p>
-                            </div>
-                             <div>
-                                <h3 className="font-semibold mb-2">Storage Details</h3>
-                                <p><span className="font-medium">Date:</span> {formattedDate}</p>
-                                <p><span className="font-medium">Commodity:</span> {record.commodityDescription}</p>
-                                <p><span className="font-medium">Location:</span> {record.location}</p>
-                                <p><span className="font-medium">Number of Bags:</span> {record.bagsStored}</p>
-                            </div>
-                        </div>
+        <div className="max-w-3xl mx-auto bg-background p-4 sm:p-6 rounded-lg">
+            <div ref={receiptRef} className="printable-area bg-white p-6 sm:p-8">
+                {/* Header */}
+                <div className="flex justify-between items-start mb-8">
+                    <div>
+                        <h1 className="text-2xl font-bold text-primary">Srilakshmi Warehouse</h1>
+                        <p className="text-sm text-muted-foreground">Your Company Address, City, State, ZIP</p>
+                        <p className="text-sm text-muted-foreground">contact@yourwarehouse.com | (123) 456-7890</p>
+                    </div>
+                    <div className="text-right">
+                        <h2 className="text-xl font-semibold uppercase text-muted-foreground">Inflow Receipt</h2>
+                        <p className="text-sm"><span className="font-medium">Receipt #</span>: {record.id}</p>
+                        <p className="text-sm"><span className="font-medium">Date:</span> {formattedDate}</p>
+                    </div>
+                </div>
 
+                {/* Customer Info */}
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div>
+                        <h3 className="text-sm font-semibold mb-2 text-muted-foreground">BILL TO</h3>
+                        <p className="font-medium text-lg">{customer.name}</p>
+                        <p>{customer.address}</p>
+                        <p>Phone: {customer.phone}</p>
+                    </div>
+                     <div>
+                        <h3 className="text-sm font-semibold mb-2 text-muted-foreground">STORAGE DETAILS</h3>
+                        <p><span className="font-medium">Commodity:</span> {record.commodityDescription}</p>
+                        <p><span className="font-medium">Location:</span> {record.location}</p>
+                        <p><span className="font-medium">Bags Stored:</span> {record.bagsStored}</p>
+                    </div>
+                </div>
+
+                {/* Items Table */}
+                <div className="mb-8">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[70%]">Description</TableHead>
+                                <TableHead className="text-right">Amount</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow>
+                                <TableCell>Hamali (Loading/Unloading Charges)</TableCell>
+                                <TableCell className="text-right">{formatCurrency(record.hamaliPayable)}</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </div>
+
+                {/* Totals Section */}
+                <div className="flex justify-end mb-8">
+                    <div className="w-full max-w-sm space-y-2 text-sm">
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Subtotal</span>
+                            <span>{formatCurrency(record.hamaliPayable)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Amount Paid</span>
+                            <span>{formatCurrency(amountPaid)}</span>
+                        </div>
                         <Separator />
-
-                        <div>
-                            <h3 className="font-semibold mb-2">Billing Summary</h3>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span>Total Hamali Payable</span>
-                                    <span>{formatCurrency(record.hamaliPayable)}</span>
-                                </div>
-                                <div className="flex justify-between font-bold text-base">
-                                    <span>Hamali Charges Paid</span>
-                                    <span>{formatCurrency(amountPaid)}</span>
-                                </div>
-                                 <div className="flex justify-between font-medium text-destructive">
-                                    <span>Hamali Charges Pending</span>
-                                    <span>{formatCurrency(hamaliPending)}</span>
-                                </div>
-                            </div>
+                        <div className="flex justify-between font-bold text-lg text-destructive">
+                            <span>Balance Due (Hamali)</span>
+                            <span>{formatCurrency(hamaliPending)}</span>
                         </div>
+                    </div>
+                </div>
 
-                         <Separator />
+                <Separator className="my-8"/>
 
-                        <div className="text-xs text-muted-foreground space-y-2">
-                           <p>
-                                <strong>Terms & Conditions:</strong>
-                                This receipt confirms the storage of the above-mentioned goods. Rent and any pending charges will be calculated at the time of withdrawal.
-                            </p>
-                            <p>This is a computer-generated receipt and does not require a signature.</p>
-                        </div>
-                    </CardContent>
-                </Card>
+                {/* Footer */}
+                <div className="text-xs text-muted-foreground">
+                    <h4 className="font-semibold mb-2">Notes & Terms</h4>
+                    <p>
+                        This receipt confirms the storage of goods as detailed above. Rent charges will be calculated at the time of withdrawal (outflow).
+                    </p>
+                    <p className="mt-4 text-center font-semibold">Thank you for your business!</p>
+                </div>
             </div>
             <div className="mt-6 flex justify-center print-hide">
                 <Button onClick={handleDownloadPdf} disabled={isGenerating}>
