@@ -39,3 +39,15 @@ export type StorageRecord = {
   plotBags?: number;
   loadBags?: number;
 };
+
+export const expenseCategories = ["Worker Salary", "Petrol", "Maintenance", "Utilities", "Other"] as const;
+
+export type ExpenseCategory = typeof expenseCategories[number];
+
+export type Expense = {
+  id: string;
+  description: string;
+  amount: number;
+  category: ExpenseCategory;
+  date: Date | Timestamp;
+};

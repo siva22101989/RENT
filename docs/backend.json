@@ -131,6 +131,32 @@
         }
       },
       "required": ["amount", "date"]
+    },
+    "expense": {
+        "title": "Expense",
+        "description": "Represents an operational expense.",
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "A description of the expense."
+          },
+          "amount": {
+            "type": "number",
+            "description": "The amount of the expense."
+          },
+          "category": {
+            "type": "string",
+            "enum": ["Worker Salary", "Petrol", "Maintenance", "Utilities", "Other"],
+            "description": "The category of the expense."
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the expense was incurred."
+          }
+        },
+        "required": ["description", "amount", "category", "date"]
     }
   },
   "auth": {
@@ -144,6 +170,10 @@
     "/storageRecords/{recordId}": {
       "schema": "storageRecord",
       "description": "Stores individual storage records."
+    },
+    "/expenses/{expenseId}": {
+        "schema": "expense",
+        "description": "Stores individual expense documents."
     }
   }
 }

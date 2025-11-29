@@ -3,11 +3,12 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import type { Customer, StorageRecord, Payment } from '@/lib/definitions';
+import type { Customer, StorageRecord, Payment, Expense } from '@/lib/definitions';
 import { revalidatePath } from 'next/cache';
 
 const customersPath = path.join(process.cwd(), 'src/lib/data/customers.json');
 const storageRecordsPath = path.join(process.cwd(), 'src/lib/data/storageRecords.json');
+const expensesPath = path.join(process.cwd(), 'src/lib/data/expenses.json');
 
 // Helper to read and parse JSON file
 async function readJsonFile<T>(filePath: string): Promise<T> {
@@ -98,6 +99,22 @@ export const addPaymentToRecord = async (recordId: string, payment: Payment) => 
     allRecords[recordIndex] = { ...record, payments: updatedPayments };
     await writeJsonFile(storageRecordsPath, allRecords);
 }
+
+// Expense Functions
+export async function expenses(): Promise<Expense[]> {
+  const allExpenses = await readJsonFile<Expense[]>(expensesPath);
+  return allExpenses.map(expense => ({
+    ...expense,
+    date: new Date(expense.date),
+  }));
+}
+
+export async function saveExpense(expense: Expense): Promise<void> {
+  const allExpenses = await expenses();
+  allExpenses.push(expense);
+  await writeJsonFile(expensesPath, allExpenses);
+}
+
 
 // These functions were for Firebase and are now replaced by local JSON file logic
 export const saveCustomers = async (data: Customer[]): Promise<void> => {

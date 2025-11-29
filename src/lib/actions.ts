@@ -2,11 +2,12 @@
 'use server';
 
 import { z } from 'zod';
-import { storageRecords, customers, saveCustomer, saveStorageRecord, updateStorageRecord, addPaymentToRecord, getStorageRecord, deleteStorageRecord, getCustomer } from '@/lib/data';
+import { storageRecords, customers, saveCustomer, saveStorageRecord, updateStorageRecord, addPaymentToRecord, getStorageRecord, deleteStorageRecord, getCustomer, saveExpense } from '@/lib/data';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { detectStorageAnomalies as detectStorageAnomaliesFlow } from '@/ai/flows/anomaly-detection';
 import type { StorageRecord } from './definitions';
+import { expenseCategories } from './definitions';
 
 const NewCustomerSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -112,7 +113,7 @@ export async function addInflow(prevState: InflowFormState, formData: FormData) 
         return { message: `Invalid data: ${message}`, success: false };
     }
 
-    let { bagsStored, hamaliRate, hamaliPaid, storageStartDate, fatherName, village, plotBags, ...rest } = validatedFields.data;
+    let { bagsStored, hamaliRate, hamaliPaid, storageStartDate, fatherName, village, plotBags, loadBags, inflowType, ...rest } = validatedFields.data;
 
     // Update customer if father's name or village was changed
     if (fatherName || village) {
@@ -128,7 +129,7 @@ export async function addInflow(prevState: InflowFormState, formData: FormData) 
         }
     }
 
-    if (rest.inflowType === 'Plot') {
+    if (inflowType === 'Plot') {
         bagsStored = plotBags || 0;
     }
 
@@ -137,7 +138,7 @@ export async function addInflow(prevState: InflowFormState, formData: FormData) 
     }
 
 
-    const hamaliPayable = (bagsStored || 0) * (hamaliRate || 0);
+    const hamaliPayable = (inflowType === 'Plot' ? plotBags || 0 : bagsStored || 0) * (hamaliRate || 0);
     const payments = [];
     if (hamaliPaid && hamaliPaid > 0) {
         payments.push({ amount: hamaliPaid, date: new Date(storageStartDate) });
@@ -154,7 +155,6 @@ export async function addInflow(prevState: InflowFormState, formData: FormData) 
         ...rest,
         id: newRecordId,
         bagsStored,
-        plotBags,
         storageStartDate: new Date(storageStartDate),
         storageEndDate: null,
         billingCycle: '6-Month Initial',
@@ -163,6 +163,9 @@ export async function addInflow(prevState: InflowFormState, formData: FormData) 
         totalRentBilled: 0,
         lorryTractorNo: rest.lorryTractorNo ?? '',
         weight: rest.weight ?? 0,
+        inflowType: inflowType ?? 'Direct',
+        plotBags: plotBags ?? undefined,
+        loadBags: loadBags ?? undefined,
     };
 
     await saveStorageRecord(newRecord);
@@ -344,4 +347,36 @@ export async function deleteStorageRecordAction(recordId: string): Promise<FormS
   }
 }
 
+const ExpenseSchema = z.object({
+  description: z.string().min(2, 'Description is required.'),
+  amount: z.coerce.number().positive('Amount must be a positive number.'),
+  date: z.string().refine(val => !isNaN(Date.parse(val)), { message: "Invalid date format" }),
+  category: z.enum(expenseCategories, { required_error: 'Category is required.' }),
+});
+
+export async function addExpense(prevState: FormState, formData: FormData) {
+    const validatedFields = ExpenseSchema.safeParse({
+        description: formData.get('description'),
+        amount: formData.get('amount'),
+        date: formData.get('date'),
+        category: formData.get('category'),
+    });
+
+    if (!validatedFields.success) {
+        const error = validatedFields.error.flatten().fieldErrors;
+        const message = Object.values(error).flat().join(', ');
+        return { message: `Invalid data: ${message}`, success: false };
+    }
+
+    const newExpense = {
+        ...validatedFields.data,
+        id: `EXP-${Date.now()}`,
+        date: new Date(validatedFields.data.date),
+    };
+
+    await saveExpense(newExpense);
+
+    revalidatePath('/expenses');
+    return { message: 'Expense added successfully.', success: true };
+}
     

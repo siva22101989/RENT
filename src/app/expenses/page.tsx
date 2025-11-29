@@ -1,34 +1,109 @@
-
-
+'use client';
 import { AppLayout } from "@/components/layout/app-layout";
 import { PageHeader } from "@/components/shared/page-header";
-import { Button } from "@/components/ui/button";
+import { AddExpenseDialog } from "@/components/expenses/add-expense-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle, IndianRupee, TrendingUp, TrendingDown, Scale } from "lucide-react";
-import { storageRecords as getStorageRecords } from "@/lib/data";
-import { formatCurrency } from "@/lib/utils";
+import { TrendingUp, TrendingDown, Scale } from "lucide-react";
+import { storageRecords as getStorageRecords, expenses as getExpenses } from "@/lib/data";
+import { formatCurrency, toDate } from "@/lib/utils";
+import { useEffect, useMemo, useState } from "react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import type { Expense, StorageRecord } from "@/lib/definitions";
+import { format } from "date-fns";
 
-export default async function ExpensesPage() {
-  const allRecords = await getStorageRecords();
-  
-  const totalIncome = allRecords.reduce((total, record) => {
+function ExpensesTable({ expenses }: { expenses: Expense[] }) {
+  if (expenses.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-6 text-center text-muted-foreground">
+          No expenses have been recorded yet.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Expense History</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead className="text-right">Amount</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {expenses.map((expense) => (
+              <TableRow key={expense.id}>
+                <TableCell>{format(toDate(expense.date), 'dd MMM yyyy')}</TableCell>
+                <TableCell>{expense.category}</TableCell>
+                <TableCell className="font-medium">{expense.description}</TableCell>
+                <TableCell className="text-right font-mono">{formatCurrency(expense.amount)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
+
+export default function ExpensesPage() {
+  const [allRecords, setAllRecords] = useState<StorageRecord[]>([]);
+  const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      const [records, expenses] = await Promise.all([
+        getStorageRecords(),
+        getExpenses()
+      ]);
+      setAllRecords(records);
+      setAllExpenses(expenses);
+      setLoading(false);
+    }
+    fetchData();
+  }, []);
+
+  const { totalIncome, totalExpenses, totalBalance } = useMemo(() => {
+    const income = allRecords.reduce((total, record) => {
       const recordPayments = (record.payments || []).reduce((acc, p) => acc + p.amount, 0);
       return total + recordPayments;
-  }, 0);
+    }, 0);
 
-  const totalExpenses = 0; // Placeholder until expense tracking is built
-  const totalBalance = totalIncome - totalExpenses;
+    const expenses = allExpenses.reduce((total, expense) => total + expense.amount, 0);
 
+    return {
+      totalIncome: income,
+      totalExpenses: expenses,
+      totalBalance: income - expenses,
+    };
+  }, [allRecords, allExpenses]);
+
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <PageHeader title="Expenses & Income" description="Track your warehouse operational finances." />
+        <div>Loading...</div>
+      </AppLayout>
+    );
+  }
+  
   return (
     <AppLayout>
       <PageHeader
         title="Expenses & Income"
         description="Track your warehouse operational finances."
       >
-        <Button>
-          <PlusCircle className="mr-2" />
-          Add Expense
-        </Button>
+        <AddExpenseDialog />
       </PageHeader>
 
       <div className="grid gap-6 md:grid-cols-3">
@@ -52,7 +127,7 @@ export default async function ExpensesPage() {
             <CardContent>
                 <div className="text-2xl font-bold text-destructive">{formatCurrency(totalExpenses)}</div>
                  <p className="text-xs text-muted-foreground">
-                    Expense tracking is coming soon.
+                    Sum of all recorded operational expenses.
                 </p>
             </CardContent>
         </Card>
@@ -68,6 +143,9 @@ export default async function ExpensesPage() {
                 </p>
             </CardContent>
         </Card>
+      </div>
+      <div className="mt-8">
+        <ExpensesTable expenses={allExpenses} />
       </div>
     </AppLayout>
   );
