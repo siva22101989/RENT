@@ -71,7 +71,7 @@ const InflowSchema = z.object({
     commodityDescription: z.string().min(2, 'Commodity description is required.'),
     location: z.string(),
     storageStartDate: z.string().refine(val => !isNaN(Date.parse(val)), { message: "Invalid date format" }),
-    bagsStored: z.coerce.number().int().positive('Number of bags must be a positive number.').optional(),
+    bagsStored: z.coerce.number().int().nonnegative('Number of bags must be a non-negative number.').optional(),
     hamaliRate: z.coerce.number().nonnegative('Hamali rate must be a non-negative number.').optional(),
     hamaliPaid: z.coerce.number().nonnegative('Hamali paid must be a non-negative number.').optional(),
     lorryTractorNo: z.string().optional(),
@@ -80,7 +80,7 @@ const InflowSchema = z.object({
     fatherName: z.string().optional(),
     village: z.string().optional(),
     inflowType: z.enum(['Direct', 'Plot']).optional(),
-    plotBags: z.coerce.number().optional(),
+    plotBags: z.coerce.number().nonnegative('Plot bags must be a non-negative number.').optional(),
     loadBags: z.coerce.number().optional(),
     khataAmount: z.coerce.number().nonnegative('Khata amount must be a non-negative number.').optional(),
 });
@@ -132,15 +132,18 @@ export async function addInflow(prevState: InflowFormState, formData: FormData) 
     }
 
     if (inflowType === 'Plot') {
-        bagsStored = plotBags || 0;
+        if (!plotBags || plotBags <= 0) {
+            return { message: "Plot Bags must be a positive number for 'Plot' inflow.", success: false };
+        }
+        bagsStored = plotBags;
+    } else { // 'Direct'
+        if (!bagsStored || bagsStored <= 0) {
+            return { message: "Number of Bags must be a positive number for 'Direct' inflow.", success: false };
+        }
     }
 
-    if (!bagsStored || bagsStored <= 0) {
-        return { message: "Number of bags must be a positive number.", success: false };
-    }
 
-
-    const hamaliPayable = (inflowType === 'Plot' ? plotBags || 0 : bagsStored || 0) * (hamaliRate || 0);
+    const hamaliPayable = bagsStored * (hamaliRate || 0);
     const payments: Payment[] = [];
     if (hamaliPaid && hamaliPaid > 0) {
         payments.push({ amount: hamaliPaid, date: new Date(storageStartDate), type: 'hamali' });
