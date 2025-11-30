@@ -172,19 +172,20 @@ export function InflowForm({ customers, nextSerialNumber }: { customers: Custome
                         </div>
                     </div>
                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="bagsStored">No. of Bags</Label>
-                            <Input 
-                                id="bagsStored" 
-                                name="bagsStored" 
-                                type="number" 
-                                placeholder="0" 
-                                required 
-                                onChange={e => setBags(Number(e.target.value))}
-                                disabled={inflowType === 'Plot'}
-                                value={inflowType === 'Plot' ? 0 : bags || ''}
-                            />
-                        </div>
+                        {inflowType === 'Direct' && (
+                            <div className="space-y-2">
+                                <Label htmlFor="bagsStored">No. of Bags</Label>
+                                <Input 
+                                    id="bagsStored" 
+                                    name="bagsStored" 
+                                    type="number" 
+                                    placeholder="0" 
+                                    required 
+                                    onChange={e => setBags(Number(e.target.value))}
+                                    value={bags || ''}
+                                />
+                            </div>
+                        )}
                          <div className="space-y-2">
                             <Label htmlFor="weight">Weight</Label>
                             <Input id="weight" name="weight" type="number" step="0.01" placeholder="0.00" />
