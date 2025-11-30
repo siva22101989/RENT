@@ -38,5 +38,24 @@
     ],
     "hamaliPayable": 2380,
     "totalRentBilled": 0
+  },
+  {
+    "customerId": "CUST-1764413218174",
+    "commodityDescription": "PADDY",
+    "location": "A6",
+    "lorryTractorNo": "",
+    "weight": 0,
+    "khataAmount": 0,
+    "id": "SLWH-3",
+    "bagsStored": 251,
+    "storageStartDate": "2025-11-29T00:00:00.000Z",
+    "storageEndDate": null,
+    "billingCycle": "6-Month Initial",
+    "payments": [],
+    "hamaliPayable": 11295,
+    "totalRentBilled": 0,
+    "inflowType": "Plot",
+    "plotBags": 251,
+    "loadBags": 251
   }
 ]
